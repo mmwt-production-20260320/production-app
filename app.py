@@ -8,9 +8,13 @@ st.set_page_config(page_title="生産管理システム", layout="centered")
 
 # --- Googleスプレッドシート接続関数 ---
 def get_sheet():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_dict(st.secrets["gcp_service_account"], scope)
+    # --- ここから書き換え ---
+    scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+    # Secretsから認証情報を読み込む
+    creds = ServiceAccountCredentials.from_service_account_info(st.secrets["gcp_service_account"], scope)
+    # スプレッドシートにログイン
     client = gspread.authorize(creds)
+    # スプレッドシートを開く（IDはあなたのシートのもの）
     return client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').get_worksheet(0)
 
 # --- 画面作成 ---
