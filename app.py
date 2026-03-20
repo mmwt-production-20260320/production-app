@@ -11,7 +11,7 @@ def get_sheet():
     # --- ここから書き換え ---
     scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     # Secretsから認証情報を読み込む
-    creds = ServiceAccountCredentials.from_service_account_info(st.secrets["gcp_service_account"], scope)
+    creds = ServiceAccountCredentials.from_json_dict(st.secrets["gcp_service_account"], scope)
     # スプレッドシートにログイン
     client = gspread.authorize(creds)
     # スプレッドシートを開く（IDはあなたのシートのもの）
