@@ -9,7 +9,7 @@ st.set_page_config(page_title="生産管理システム", layout="centered")
 # --- Googleスプレッドシート接続関数 ---
 def get_sheet():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name('secret_key.json', scope)
+    creds = ServiceAccountCredentials.from_json_dict(st.secrets["gcp_service_account"], scope)
     client = gspread.authorize(creds)
     return client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').get_worksheet(0)
 
