@@ -3,20 +3,24 @@ import pandas as pd
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+# --- 0. 設定情報 (GitHubのSecretsに登録した名前と合わせる) ---
+SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
 
 def save_to_sheets(data_list):
-    """スプレッドシートの末尾にデータを追加する関数"""
+    """GitHubのSecretsを使ってスプレッドシートに保存する"""
     try:
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key(SPREADSHEET_KEY).sheet1 # 1枚目のシート
+        # st.secrets から設定を読み込む（ファイル名は不要になります）
+        creds_dict = st.secrets["gcp_service_account"]
+        client = gspread.service_account_from_dict(creds_dict)
+        
+        # スプレッドシートを開く
+        sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         sheet.append_row(data_list)
         return True
     except Exception as e:
         st.error(f"保存エラー: {e}")
         return False
-
+        
 # --- 2. ページ設定とCSS ---
 st.set_page_config(page_title="生産管理システム", layout="centered")
 
