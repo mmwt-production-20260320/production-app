@@ -17,11 +17,9 @@ st.markdown("""
         text-align: center;
         margin-bottom: 30px;
     }
-    /* 曜日の位置ズレ対策：上端揃え */
     [data-testid="stHorizontalBlock"] {
         align-items: flex-start !important;
     }
-    /* 入力欄の高さ統一 */
     div[data-baseweb="input"], div[data-baseweb="select"] {
         min-height: 45px !important;
         height: 45px !important;
@@ -35,18 +33,15 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- セッション状態の初期化 ---
-# フォームをリセットするためのキーを一括管理
 if 'confirm' not in st.session_state:
     st.session_state.confirm = False
 
 def reset_all_fields():
-    """すべての入力値を初期値に戻す"""
-    st.session_state.立体 = 0
-    st.session_state.ズボン = 0
-    st.session_state.プレス = 0
-    st.session_state.平面 = 0
-    st.session_state.Yシャツ = 0
-    st.session_state.総労働時間 = 0.0
+    """安全にすべての入力値を初期化する"""
+    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "総労働時間"]
+    for key in keys:
+        if key in st.session_state:
+            st.session_state[key] = 0.0 if key == "総労働時間" else 0
     st.session_state.confirm = False
 
 # --- 画面構成 ---
@@ -105,11 +100,10 @@ if not st.session_state.confirm:
     c1, c2 = st.columns(2)
     with c1:
         if st.button("保存する"):
-            # 入力チェック：合計または人時生産点数が0なら止める
             if total_val == 0:
                 st.error("生産項目が入力されていないため保存できません。")
             elif work_hours == 0:
-                st.error("総労働時間が入力されていないため、人時生産点数が計算できません。")
+                st.error("総労働時間が入力されていないため保存できません。")
             else:
                 st.session_state.confirm = True
                 st.rerun()
@@ -124,15 +118,12 @@ if st.session_state.confirm:
     conf_c1, conf_c2 = st.columns(2)
     with conf_c1:
         if st.button("はい（確定）"):
-            # --- ここにスプレッドシートへの保存処理(gspread等)を追加 ---
-            
-            st.success("スプレッドシートに正常に追加されました。")
-            # 保存完了後、すべての値をリセットして二重保存を防止
+            # TODO: ここにスプレッドシートへの保存コードを記述
+            st.success("スプレッドシートに追加しました！")
             reset_all_fields()
             st.rerun()
             
     with conf_c2:
         if st.button("いいえ（戻る）"):
-            # 保存せずにフォームをリセット
             reset_all_fields()
             st.rerun()
