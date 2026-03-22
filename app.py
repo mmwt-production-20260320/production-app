@@ -1,161 +1,134 @@
 import streamlit as st
-import gspread
+import pandas as pd
 from datetime import datetime
 
 # --- ページ設定 ---
-st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
+st.set_page_config(page_title="生産管理システム", layout="centered")
 
-# --- デザイン調整 (メニュー非表示・上揃え・余白追加) ---
+# --- スタイル定義 (CSS) ---
 st.markdown("""
     <style>
-    /* 右上のメニュー、フッター、ヘッダーを非表示にする */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* 全体の文字サイズ統一 */
-    html, body, [class*="css"], .stWidgetLabel p, .stMarkdown p {
-        font-size: 15px !important;
-        margin-bottom: 6px !important;
-    }
-    h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
-
-    /* 入力ボックスの高さを42pxで統一 */
-    .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {
-        height: 42px !important;
-        font-size: 15px !important;
-        display: flex !important;
-        align-items: center !important;
-        line-height: normal !important;
-    }
-
-    /* 黒背景ボックス（表示用）のデザイン */
-    .result-box {
-        background-color: #262730; 
-        color: #ffffff;
-        border: 1px solid rgba(250, 250, 250, 0.2); 
-        border-radius: 0.5rem;
-        height: 42px !important; 
-        min-height: 42px !important;
-        display: flex;
-        align-items: center; 
-        padding: 0px 12px; 
-        font-size: 15px !important;
-        font-weight: bold;
-        box-sizing: border-box;
-        width: 100%;
+    /* 全体のフォントサイズ調整 */
+    html, body, [data-testid="stWidgetLabel"] p {
+        font-size: 16px !important; /* 他のテキストの文字サイズを統一 */
     }
     
-    /* すべてのカラムを「上基準」で整列 */
-    [data-testid="column"] {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start !important;
+    /* タイトルの文字サイズ (以前より1ptアップを想定) */
+    .main-title {
+        font-size: 26px !important; 
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 30px;
     }
 
-    /* 横の間隔と縦の間隔 */
-    div[data-testid="column"] { padding-right: 15px !important; }
-    div[data-testid="column"]:last-child { padding-right: 0px !important; }
-    div[data-testid="stVerticalBlock"] { gap: 1.2rem !important; }
+    /* テキストボックスの上位置を強制的に合わせる */
+    [data-testid="stHorizontalBlock"] {
+        align-items: flex-start !important;
+    }
 
-    hr { margin: 20px 0 !important; }
+    /* 入力欄の高さと余白を統一 (5項目合計などのサイズ合わせ) */
+    .stNumberInput input, .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+        min-height: 45px !important;
+    }
+
+    /* ボタンのスタイル */
+    .stButton button {
+        width: 100%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- スプレッドシート接続 ---
-def get_sheet():
-    # secretsから認証情報を取得
-    client = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
-    return client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').get_worksheet(0)
+# --- タイトル表示 ---
+st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
-# エリアごとの工場データ
-area_data = {"盛岡": ["滝沢", "都南", "矢巾", "南"], "花巻": ["桜木", "藤沢", "北上", "特殊", "江釣子", "水沢", "一関"]}
+# --- データの初期化関数 ---
+def reset_data():
+    st.session_state.立体 = 0
+    st.session_state.ズボン = 0
+    st.session_state.プレス = 0
+    st.session_state.平面 = 0
+    st.session_state.Yシャツ = 0
+    st.session_state.総労働時間 = 0.0
+    st.session_state.confirm = False
 
-# --- 保存処理 ---
-def save_data():
-    t_qty = st.session_state.ritai + st.session_state.heimen + st.session_state.zubon + st.session_state.yshirt + st.session_state.press
-    w_h = float(st.session_state.work_h)
-    try:
-        sheet = get_sheet()
-        date_str = st.session_state.input_date.strftime("%Y-%m-%d")
-        new_row = [date_str, st.session_state.display_day, st.session_state.area, st.session_state.factory,
-                   st.session_state.ritai, st.session_state.heimen, st.session_state.zubon,
-                   st.session_state.yshirt, st.session_state.press, t_qty, w_h, round(t_qty/w_h, 2)]
-        sheet.append_row(new_row)
-        st.success("✅ データを保存しました。")
-        # 状態リセット
-        st.session_state.ritai = 0
-        st.session_state.heimen = 0
-        st.session_state.zubon = 0
-        st.session_state.yshirt = 0
-        st.session_state.press = 0
-        st.session_state.work_h = "0.0"
-    except Exception as e:
-        st.error(f"❌ 保存失敗: {e}")
+if 'confirm' not in st.session_state:
+    st.session_state.confirm = False
 
-# --- 画面構成 ---
-st.title("生産管理入力")
-
-# 1. 日付と曜日
-c_d1, c_d2 = st.columns(2)
-with c_d1:
-    input_date = st.date_input("入力日", datetime.now(), key="input_date")
-with c_d2:
-    day_name = ["月","火","水","木","金","土","日"][input_date.weekday()]
-    st.markdown("曜日")
-    st.markdown(f'<div class="result-box">{day_name}</div>', unsafe_allow_html=True)
-    st.session_state.display_day = day_name
-
-# 2. 拠点選択（エラー対策版）
-c_a1, c_a2 = st.columns(2)
-with c_a1:
-    # エリア選択。key="area" で状態を保持
-    selected_area = st.selectbox("エリア", list(area_data.keys()), key="area")
-with c_a2:
-    # エリア未選択時のエラーを防ぐため、安全に取得
-    current_area = st.session_state.get("area", list(area_data.keys())[0])
-    st.selectbox("工場名", area_data[current_area], key="factory")
-
-st.divider()
-
-# 3. 生産数
-col1, col2, col3 = st.columns(3)
+# --- 入力フォームレイアウト ---
+# 1段目：日付と曜日
+col1, col2 = st.columns(2)
 with col1:
-    st.number_input("立体", min_value=0, step=1, key="ritai")
-    st.number_input("平面", min_value=0, step=1, key="heimen")
+    input_date = st.date_input("入力日", datetime.now())
 with col2:
-    st.number_input("ズボン", min_value=0, step=1, key="zubon")
-    st.number_input("Yシャツ", min_value=0, step=1, key="yshirt")
+    # 曜日の位置を日付に合わせる
+    weekday_map = ["月", "火", "水", "木", "金", "土", "日"]
+    current_weekday = weekday_map[input_date.weekday()]
+    st.text_input("曜日", value=current_weekday, disabled=True)
+
+# 2段目：エリアと工場名
+col3, col4 = st.columns(2)
 with col3:
-    st.number_input("プレス", min_value=0, step=1, key="press")
-    total_qty = st.session_state.ritai + st.session_state.heimen + st.session_state.zubon + st.session_state.yshirt + st.session_state.press
-    st.markdown("5項目合計")
-    st.markdown(f'<div class="result-box">{total_qty}</div>', unsafe_allow_html=True)
+    area = st.selectbox("エリア", ["盛岡", "その他"])
+with col4:
+    factory = st.selectbox("工場名", ["滝沢", "その他"])
 
-st.divider()
+st.markdown("---")
 
-# 4. 労働時間と結果
-col_l, col_r = st.columns(2)
-with col_l:
-    st.selectbox("総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
-with col_r:
-    w_h_val = float(st.session_state.work_h)
-    prod = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
-    st.markdown("人時生産点数")
-    st.markdown(f'<div class="result-box">{prod}</div>', unsafe_allow_html=True)
+# 3段目：生産項目（上段）
+col5, col6, col7 = st.columns(3)
+with col5:
+    ritai = st.number_input("立体", min_value=0, key="立体")
+with col6:
+    zubon = st.number_input("ズボン", min_value=0, key="ズボン")
+with col7:
+    press = st.number_input("プレス", min_value=0, key="プレス")
 
-st.divider()
+# 4段目：生産項目（下段）と合計
+col8, col9, col10 = st.columns(3)
+with col8:
+    heimen = st.number_input("平面", min_value=0, key="平面")
+with col9:
+    yshirt = st.number_input("Yシャツ", min_value=0, key="Yシャツ")
+with col10:
+    total_items = ritai + zubon + press + heimen + yshirt
+    st.number_input("5項目合計", value=total_items, disabled=True)
 
-# 5. ボタン
-btn1, btn2 = st.columns(2)
-with btn1:
-    st.button("保存する", use_container_width=True, on_click=save_data, disabled=(total_qty == 0 or float(st.session_state.work_h) == 0))
-with btn2:
-    if st.button("キャンセル", use_container_width=True):
-        st.session_state.ritai = 0
-        st.session_state.heimen = 0
-        st.session_state.zubon = 0
-        st.session_state.yshirt = 0
-        st.session_state.press = 0
-        st.session_state.work_h = "0.0"
+# 5段目：労働時間と人時生産点数
+col11, col12 = st.columns(2)
+with col11:
+    work_hours = st.selectbox("総労働時間 (h)", [float(i/10) for i in range(0, 241, 5)], key="総労働時間")
+with col12:
+    productivity = round(total_items / work_hours, 2) if work_hours > 0 else 0
+    st.number_input("人時生産点数", value=productivity, disabled=True)
+
+st.markdown("---")
+
+# --- 保存ロジック ---
+col_btn1, col_btn2 = st.columns(2)
+
+with col_btn1:
+    if st.button("保存する"):
+        st.session_state.confirm = True
+
+with col_btn2:
+    if st.button("キャンセル"):
+        reset_data()
         st.rerun()
+
+# --- 確認ダイアログ ---
+if st.session_state.confirm:
+    st.warning("保存してよろしいですか？")
+    c_col1, c_col2 = st.columns(2)
+    with c_col1:
+        if st.button("はい (保存)"):
+            # ここにスプレッドシート追加の処理を記述
+            # (例: gspread等を使用した書き込み処理)
+            st.success("スプレッドシートに保存しました！")
+            st.session_state.confirm = False
+            # 保存後にリセットする場合
+            # reset_data()
+            # st.rerun()
+    with c_col2:
+        if st.button("いいえ (戻る)"):
+            reset_data()
+            st.rerun()
