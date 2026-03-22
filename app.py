@@ -8,41 +8,39 @@ st.set_page_config(page_title="生産管理システム", layout="centered")
 # --- スタイル定義 (CSS) ---
 st.markdown("""
     <style>
-    /* 全体のフォントサイズ調整 */
-    html, body, [data-testid="stWidgetLabel"] p {
-        font-size: 16px !important; /* 他のテキストの文字サイズを統一 */
+    html, body, [data-testid="stWidgetLabel"] p, .stNumberInput input, .stTextInput input {
+        font-size: 16px !important;
     }
-    
-    /* タイトルの文字サイズ (以前より1ptアップを想定) */
     .main-title {
         font-size: 26px !important; 
         font-weight: bold;
         text-align: center;
         margin-bottom: 30px;
     }
-
-    /* テキストボックスの上位置を強制的に合わせる */
+    /* 曜日の位置ズレ対策：上端揃え */
     [data-testid="stHorizontalBlock"] {
         align-items: flex-start !important;
     }
-
-    /* 入力欄の高さと余白を統一 (5項目合計などのサイズ合わせ) */
-    .stNumberInput input, .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+    /* 入力欄の高さ統一 */
+    div[data-baseweb="input"], div[data-baseweb="select"] {
         min-height: 45px !important;
+        height: 45px !important;
     }
-
-    /* ボタンのスタイル */
     .stButton button {
         width: 100%;
+        height: 50px;
+        font-size: 18px !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- タイトル表示 ---
-st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
+# --- セッション状態の初期化 ---
+# フォームをリセットするためのキーを一括管理
+if 'confirm' not in st.session_state:
+    st.session_state.confirm = False
 
-# --- データの初期化関数 ---
-def reset_data():
+def reset_all_fields():
+    """すべての入力値を初期値に戻す"""
     st.session_state.立体 = 0
     st.session_state.ズボン = 0
     st.session_state.プレス = 0
@@ -51,16 +49,14 @@ def reset_data():
     st.session_state.総労働時間 = 0.0
     st.session_state.confirm = False
 
-if 'confirm' not in st.session_state:
-    st.session_state.confirm = False
+# --- 画面構成 ---
+st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
-# --- 入力フォームレイアウト ---
 # 1段目：日付と曜日
 col1, col2 = st.columns(2)
 with col1:
     input_date = st.date_input("入力日", datetime.now())
 with col2:
-    # 曜日の位置を日付に合わせる
     weekday_map = ["月", "火", "水", "木", "金", "土", "日"]
     current_weekday = weekday_map[input_date.weekday()]
     st.text_input("曜日", value=current_weekday, disabled=True)
@@ -68,9 +64,9 @@ with col2:
 # 2段目：エリアと工場名
 col3, col4 = st.columns(2)
 with col3:
-    area = st.selectbox("エリア", ["盛岡", "その他"])
+    area = st.selectbox("エリア", ["盛岡", "滝沢", "北上"], key="area_select")
 with col4:
-    factory = st.selectbox("工場名", ["滝沢", "その他"])
+    factory = st.selectbox("工場名", ["滝沢", "盛岡中央", "青山"], key="factory_select")
 
 st.markdown("---")
 
@@ -90,45 +86,53 @@ with col8:
 with col9:
     yshirt = st.number_input("Yシャツ", min_value=0, key="Yシャツ")
 with col10:
-    total_items = ritai + zubon + press + heimen + yshirt
-    st.number_input("5項目合計", value=total_items, disabled=True)
+    total_val = ritai + zubon + press + heimen + yshirt
+    st.number_input("5項目合計", value=total_val, disabled=True)
 
 # 5段目：労働時間と人時生産点数
 col11, col12 = st.columns(2)
 with col11:
-    work_hours = st.selectbox("総労働時間 (h)", [float(i/10) for i in range(0, 241, 5)], key="総労働時間")
+    hour_list = [round(x * 0.1, 1) for x in range(0, 241, 5)]
+    work_hours = st.selectbox("総労働時間 (h)", hour_list, key="総労働時間")
 with col12:
-    productivity = round(total_items / work_hours, 2) if work_hours > 0 else 0
+    productivity = round(total_val / work_hours, 2) if work_hours > 0 else 0
     st.number_input("人時生産点数", value=productivity, disabled=True)
 
 st.markdown("---")
 
-# --- 保存ロジック ---
-col_btn1, col_btn2 = st.columns(2)
+# --- 保存・キャンセルボタンの制御 ---
+if not st.session_state.confirm:
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("保存する"):
+            # 入力チェック：合計または人時生産点数が0なら止める
+            if total_val == 0:
+                st.error("生産項目が入力されていないため保存できません。")
+            elif work_hours == 0:
+                st.error("総労働時間が入力されていないため、人時生産点数が計算できません。")
+            else:
+                st.session_state.confirm = True
+                st.rerun()
+    with c2:
+        if st.button("キャンセル"):
+            reset_all_fields()
+            st.rerun()
 
-with col_btn1:
-    if st.button("保存する"):
-        st.session_state.confirm = True
-
-with col_btn2:
-    if st.button("キャンセル"):
-        reset_data()
-        st.rerun()
-
-# --- 確認ダイアログ ---
+# --- 確認メッセージと実行 ---
 if st.session_state.confirm:
-    st.warning("保存してよろしいですか？")
-    c_col1, c_col2 = st.columns(2)
-    with c_col1:
-        if st.button("はい (保存)"):
-            # ここにスプレッドシート追加の処理を記述
-            # (例: gspread等を使用した書き込み処理)
-            st.success("スプレッドシートに保存しました！")
-            st.session_state.confirm = False
-            # 保存後にリセットする場合
-            # reset_data()
-            # st.rerun()
-    with c_col2:
-        if st.button("いいえ (戻る)"):
-            reset_data()
+    st.warning("この内容で保存してよろしいですか？")
+    conf_c1, conf_c2 = st.columns(2)
+    with conf_c1:
+        if st.button("はい（確定）"):
+            # --- ここにスプレッドシートへの保存処理(gspread等)を追加 ---
+            
+            st.success("スプレッドシートに正常に追加されました。")
+            # 保存完了後、すべての値をリセットして二重保存を防止
+            reset_all_fields()
+            st.rerun()
+            
+    with conf_c2:
+        if st.button("いいえ（戻る）"):
+            # 保存せずにフォームをリセット
+            reset_all_fields()
             st.rerun()
