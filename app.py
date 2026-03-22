@@ -5,28 +5,31 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- デザイン調整 (上揃え・余白追加) ---
+# --- デザイン調整 (メニュー非表示・上揃え・余白追加) ---
 st.markdown("""
     <style>
+    /* 右上のメニュー、フッター、ヘッダーを非表示にする */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
     /* 全体の文字サイズ統一 */
     html, body, [class*="css"], .stWidgetLabel p, .stMarkdown p {
         font-size: 15px !important;
-        margin-bottom: 6px !important; /* ラベル下の余白を少し広げた */
+        margin-bottom: 6px !important;
     }
     h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
 
-    /* ボックスの高さを42pxで統一 */
-    /* --- 修正後 --- */
-.stNumberInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {
-    height: 42px !important;
-    font-size: 15px !important;
-    display: flex !important;           /* 👈 これを追加：中身を自由に並べられるようにする */
-    align-items: center !important;    /* 👈 これを追加：上下の真ん中に寄せる */
-    line-height: normal !important;    /* 👈 これを追加：行の高さによるズレを防止 */
-}
+    /* 入力ボックスの高さを42pxで統一 */
+    .stNumberInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {
+        height: 42px !important;
+        font-size: 15px !important;
+        display: flex !important;
+        align-items: center !important;
+        line-height: normal !important;
     }
 
-    /* 黒背景ボックスのデザイン */
+    /* 黒背景ボックス（表示用）のデザイン */
     .result-box {
         background-color: #262730; 
         color: #ffffff;
@@ -43,25 +46,17 @@ st.markdown("""
         width: 100%;
     }
     
-    /* 【修正】すべてのカラムを「上基準」で整列 */
+    /* すべてのカラムを「上基準」で整列 */
     [data-testid="column"] {
         display: flex;
         flex-direction: column;
-        justify-content: flex-start !important; /* 上揃えに変更 */
+        justify-content: flex-start !important;
     }
 
-    /* ボックス同士の横の間隔を広げる */
-    div[data-testid="column"] {
-        padding-right: 15px !important; 
-    }
-    div[data-testid="column"]:last-child {
-        padding-right: 0px !important;
-    }
-
-    /* 縦方向のブロック間の余白 */
-    div[data-testid="stVerticalBlock"] {
-        gap: 1.2rem !important; 
-    }
+    /* 横の間隔と縦の間隔 */
+    div[data-testid="column"] { padding-right: 15px !important; }
+    div[data-testid="column"]:last-child { padding-right: 0px !important; }
+    div[data-testid="stVerticalBlock"] { gap: 1.2rem !important; }
 
     hr { margin: 20px 0 !important; }
     </style>
@@ -69,9 +64,11 @@ st.markdown("""
 
 # --- スプレッドシート接続 ---
 def get_sheet():
+    # secretsから認証情報を取得
     client = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
     return client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').get_worksheet(0)
 
+# エリアごとの工場データ
 area_data = {"盛岡": ["滝沢", "都南", "矢巾", "南"], "花巻": ["桜木", "藤沢", "北上", "特殊", "江釣子", "水沢", "一関"]}
 
 # --- 保存処理 ---
@@ -109,12 +106,15 @@ with c_d2:
     st.markdown(f'<div class="result-box">{day_name}</div>', unsafe_allow_html=True)
     st.session_state.display_day = day_name
 
-# 2. 拠点選択
+# 2. 拠点選択（エラー対策版）
 c_a1, c_a2 = st.columns(2)
 with c_a1:
-    st.selectbox("エリア", list(area_data.keys()), key="area")
+    # エリア選択。key="area" で状態を保持
+    selected_area = st.selectbox("エリア", list(area_data.keys()), key="area")
 with c_a2:
-    st.selectbox("工場名", area_data[st.session_state.area], key="factory")
+    # エリア未選択時のエラーを防ぐため、安全に取得
+    current_area = st.session_state.get("area", list(area_data.keys())[0])
+    st.selectbox("工場名", area_data[current_area], key="factory")
 
 st.divider()
 
@@ -137,7 +137,6 @@ st.divider()
 # 4. 労働時間と結果
 col_l, col_r = st.columns(2)
 with col_l:
-    # ⏰マークを一旦外し、高さを右側と完全に合わせる
     st.selectbox("総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
 with col_r:
     w_h_val = float(st.session_state.work_h)
