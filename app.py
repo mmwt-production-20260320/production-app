@@ -40,22 +40,28 @@ with c2:
 
 st.divider()
 
-# 2. 生産数入力
+# 2. 生産数入力（エラー回避のため、valueにsession_stateを紐付け）
 st.subheader("📦 生産数入力")
 col1, col2, col3 = st.columns(3)
+
+# 各項目の初期値をセッションに保存（なければ0）
+for key in ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]:
+    if key not in st.session_state:
+        st.session_state[key] = 0.0 if key == "work_h" else 0
+
 with col1:
-    ritai = st.number_input("立体", min_value=0, step=1, value=0, key="ritai")
-    heimen = st.number_input("平面", min_value=0, step=1, value=0, key="heimen")
+    ritai = st.number_input("立体", min_value=0, step=1, key="input_ritai", value=st.session_state.ritai)
+    heimen = st.number_input("平面", min_value=0, step=1, key="input_heimen", value=st.session_state.heimen)
 with col2:
-    zubon = st.number_input("ズボン", min_value=0, step=1, value=0, key="zubon")
-    yshirt = st.number_input("Yシャツ", min_value=0, step=1, value=0, key="yshirt")
+    zubon = st.number_input("ズボン", min_value=0, step=1, key="input_zubon", value=st.session_state.zubon)
+    yshirt = st.number_input("Yシャツ", min_value=0, step=1, key="input_yshirt", value=st.session_state.yshirt)
 with col3:
-    press = st.number_input("プレス", min_value=0, step=1, value=0, key="press")
+    press = st.number_input("プレス", min_value=0, step=1, key="input_press", value=st.session_state.press)
 
 st.divider()
 
 # 3. 労働時間
-work_h = st.number_input("⏰ 総労働時間 (h)", min_value=0.0, step=0.1, value=0.0, key="work_h")
+work_h = st.number_input("⏰ 総労働時間 (h)", min_value=0.0, step=0.1, key="input_work_h", value=st.session_state.work_h)
 st.caption("※10進数で入力してください（例：1時間30分は 1.5）")
 
 # 4. 自動計算
@@ -70,9 +76,7 @@ else:
     st.info(f"📊 **合計:** {total_qty} 点  /  **生産性:** {productivity}")
 
 # 5. 保存処理
-save_button = st.button("この内容で保存 💾", use_container_width=True, disabled=is_empty)
-
-if save_button:
+if st.button("この内容で保存 💾", use_container_width=True, disabled=is_empty):
     try:
         with st.spinner("送信中..."):
             sheet = get_sheet()
@@ -88,12 +92,19 @@ if save_button:
             ]
             
             sheet.append_row(new_row)
+            
+            # --- 【重要！】エラーを回避しながらリセット ---
+            st.session_state.ritai = 0
+            st.session_state.heimen = 0
+            st.session_state.zubon = 0
+            st.session_state.yshirt = 0
+            st.session_state.press = 0
+            st.session_state.work_h = 0.0
+            
             st.success("✅ 保存完了！")
             st.balloons()
             
-            # リセット
-            for key in ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]:
-                st.session_state[key] = 0 if key != "work_h" else 0.0
+            # 画面を再読み込みして表示を0に戻す
             st.rerun()
             
     except Exception as e:
