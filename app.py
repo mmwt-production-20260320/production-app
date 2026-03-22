@@ -47,7 +47,7 @@ st.markdown("""
 
     /* ボックス同士の横の間隔を広げる */
     div[data-testid="column"] {
-        padding-right: 18px !important; 
+        padding-right: 15px !important; 
     }
     div[data-testid="column"]:last-child {
         padding-right: 0px !important;
@@ -82,12 +82,12 @@ def save_data():
         sheet.append_row(new_row)
         st.success("✅ データを保存しました。")
         # 状態リセット
-        st.session_state.ritai = ""
-        st.session_state.heimen = ""
-        st.session_state.zubon = ""
-        st.session_state.yshirt = ""
-        st.session_state.press = ""
-        st.session_state.work_h = ""
+        st.session_state.ritai = 0
+        st.session_state.heimen = 0
+        st.session_state.zubon = 0
+        st.session_state.yshirt = 0
+        st.session_state.press = 0
+        st.session_state.work_h = "0.0"
     except Exception as e:
         st.error(f"❌ 保存失敗: {e}")
 
@@ -133,7 +133,7 @@ st.divider()
 col_l, col_r = st.columns(2)
 with col_l:
     # ⏰マークを一旦外し、高さを右側と完全に合わせる
-    st.selectbox("総労働時間 (h)", ["3.0","3.15","3.30","3,45","4,0","4.15","4.30","4.45","5.00","5.15","5.30","5.45","6.00","6.15","6.30","6.45","7.00"], key="work_h")
+    st.selectbox("総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
 with col_r:
     w_h_val = float(st.session_state.work_h)
     prod = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
@@ -148,11 +148,10 @@ with btn1:
     st.button("保存する", use_container_width=True, on_click=save_data, disabled=(total_qty == 0 or float(st.session_state.work_h) == 0))
 with btn2:
     if st.button("キャンセル", use_container_width=True):
-        st.rerun()
-        st.session_state.ritai = ""
-        st.session_state.heimen = ""
-        st.session_state.zubon = ""
-        st.session_state.yshirt = ""
-        st.session_state.press = ""
-        st.session_state.work_h = ""
+        st.session_state.ritai = 0
+        st.session_state.heimen = 0
+        st.session_state.zubon = 0
+        st.session_state.yshirt = 0
+        st.session_state.press = 0
+        st.session_state.work_h = "0.0"
         st.rerun()
