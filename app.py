@@ -7,18 +7,21 @@ from oauth2client.service_account import ServiceAccountCredentials
 SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
 
 def save_to_sheets(data_list):
-    """GitHubのSecretsを使ってスプレッドシートに保存する"""
+    """Secretsを使ってスプレッドシートに保存する"""
     try:
-        # st.secrets から設定を読み込む（ファイル名は不要になります）
+        # スプレッドシートのID（URLのd/〜/editの間にある文字）
+        SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
+        
+        # Secretsに登録した [gcp_service_account] を読み込む
         creds_dict = st.secrets["gcp_service_account"]
         client = gspread.service_account_from_dict(creds_dict)
         
-        # スプレッドシートを開く
+        # シートを開いて末尾に追加
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         sheet.append_row(data_list)
         return True
     except Exception as e:
-        st.error(f"保存エラー: {e}")
+        st.error(f"保存エラーが発生しました: {e}")
         return False
         
 # --- 2. ページ設定とCSS ---
