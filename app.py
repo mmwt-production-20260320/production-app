@@ -40,28 +40,29 @@ with c2:
 
 st.divider()
 
-# 2. 生産数入力（エラー回避のため、valueにsession_stateを紐付け）
+# 2. 生産数入力（Session Stateを直接管理する方式に変更）
 st.subheader("📦 生産数入力")
+
+# セッション状態の初期化
+input_keys = ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]
+for k in input_keys:
+    if k not in st.session_state:
+        st.session_state[k] = 0.0 if k == "work_h" else 0
+
 col1, col2, col3 = st.columns(3)
-
-# 各項目の初期値をセッションに保存（なければ0）
-for key in ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]:
-    if key not in st.session_state:
-        st.session_state[key] = 0.0 if key == "work_h" else 0
-
 with col1:
-    ritai = st.number_input("立体", min_value=0, step=1, key="input_ritai", value=st.session_state.ritai)
-    heimen = st.number_input("平面", min_value=0, step=1, key="input_heimen", value=st.session_state.heimen)
+    ritai = st.number_input("立体", min_value=0, step=1, key="ritai")
+    heimen = st.number_input("平面", min_value=0, step=1, key="heimen")
 with col2:
-    zubon = st.number_input("ズボン", min_value=0, step=1, key="input_zubon", value=st.session_state.zubon)
-    yshirt = st.number_input("Yシャツ", min_value=0, step=1, key="input_yshirt", value=st.session_state.yshirt)
+    zubon = st.number_input("ズボン", min_value=0, step=1, key="zubon")
+    yshirt = st.number_input("Yシャツ", min_value=0, step=1, key="yshirt")
 with col3:
-    press = st.number_input("プレス", min_value=0, step=1, key="input_press", value=st.session_state.press)
+    press = st.number_input("プレス", min_value=0, step=1, key="press")
 
 st.divider()
 
 # 3. 労働時間
-work_h = st.number_input("⏰ 総労働時間 (h)", min_value=0.0, step=0.1, key="input_work_h", value=st.session_state.work_h)
+work_h = st.number_input("⏰ 総労働時間 (h)", min_value=0.0, step=0.1, key="work_h")
 st.caption("※10進数で入力してください（例：1時間30分は 1.5）")
 
 # 4. 自動計算
@@ -91,20 +92,22 @@ if st.button("この内容で保存 💾", use_container_width=True, disabled=is
                 total_qty, work_h, productivity
             ]
             
+            # スプレッドシートに書き込み
             sheet.append_row(new_row)
             
-            # --- 【重要！】エラーを回避しながらリセット ---
-            st.session_state.ritai = 0
-            st.session_state.heimen = 0
-            st.session_state.zubon = 0
-            st.session_state.yshirt = 0
-            st.session_state.press = 0
-            st.session_state.work_h = 0.0
+            # --- 【重要】リセット処理 ---
+            # 直接 session_state を書き換えてから再起動
+            st.session_state["ritai"] = 0
+            st.session_state["heimen"] = 0
+            st.session_state["zubon"] = 0
+            st.session_state["yshirt"] = 0
+            st.session_state["press"] = 0
+            st.session_state["work_h"] = 0.0
             
-            st.success("✅ 保存完了！")
+            st.success("✅ 保存完了！数値をリセットしました。")
             st.balloons()
             
-            # 画面を再読み込みして表示を0に戻す
+            # 画面をリフレッシュして 0 を反映させる
             st.rerun()
             
     except Exception as e:
