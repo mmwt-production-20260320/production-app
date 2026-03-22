@@ -5,17 +5,17 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- CSS設定 (下基準の整列・サイズ統一) ---
+# --- デザイン調整 (下基準・サイズ統一) ---
 st.markdown("""
     <style>
-    /* 全体の文字サイズを標準に統一 */
+    /* 全体の文字サイズを工場名（標準）に統一 */
     html, body, [class*="css"], .stWidgetLabel p, .stMarkdown p {
         font-size: 15px !important;
         margin-bottom: 2px !important;
     }
     h1 { font-size: 20px !important; text-align: center; margin-bottom: 15px !important; }
 
-    /* 全ボックスの高さを42pxで統一 */
+    /* ボックスの高さを42pxで統一 */
     .stNumberInput input, .stSelectbox div, .stDateInput input {
         height: 42px !important;
         font-size: 15px !important;
@@ -38,7 +38,7 @@ st.markdown("""
         width: 100%;
     }
     
-    /* 重要：すべてのカラムを「下詰め」に強制 */
+    /* すべてのカラムを下辺基準で整列 */
     [data-testid="column"] {
         display: flex;
         flex-direction: column;
@@ -49,30 +49,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 接続設定 ---
+# --- スプレッドシート接続 ---
 def get_sheet():
     client = gspread.service_account_from_dict(st.secrets["gcp_service_account"])
     return client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').get_worksheet(0)
 
 area_data = {"盛岡": ["滝沢", "都南", "矢巾", "南"], "花巻": ["桜木", "藤沢", "北上", "特殊", "江釣子", "水沢", "一関"]}
 
-# --- 状態の初期化 (エラー回避用) ---
-if "ritai" not in st.session_state:
-    st.session_state.ritai = 0
-    st.session_state.heimen = 0
-    st.session_state.zubon = 0
-    st.session_state.yshirt = 0
-    st.session_state.press = 0
-    st.session_state.work_h = "0.0"
-
-def clear_inputs():
-    st.session_state.ritai = 0
-    st.session_state.heimen = 0
-    st.session_state.zubon = 0
-    st.session_state.yshirt = 0
-    st.session_state.press = 0
-    st.session_state.work_h = "0.0"
-
+# --- 保存処理 ---
 def save_data():
     t_qty = st.session_state.ritai + st.session_state.heimen + st.session_state.zubon + st.session_state.yshirt + st.session_state.press
     w_h = float(st.session_state.work_h)
@@ -83,14 +67,21 @@ def save_data():
                    st.session_state.ritai, st.session_state.heimen, st.session_state.zubon,
                    st.session_state.yshirt, st.session_state.press, t_qty, w_h, round(t_qty/w_h, 2)]
         sheet.append_row(new_row)
-        st.success("✅ 本日のデータを記録しました。")
-        clear_inputs()
+        st.success("✅ データを保存しました。")
+        # リセット処理
+        st.session_state.ritai = 0
+        st.session_state.heimen = 0
+        st.session_state.zubon = 0
+        st.session_state.yshirt = 0
+        st.session_state.press = 0
+        st.session_state.work_h = "0.0"
     except Exception as e:
         st.error(f"❌ 保存失敗: {e}")
 
-# --- 画面レイアウト ---
+# --- 画面構成 ---
 st.title("生産管理入力")
 
+# 1. 日付と曜日
 c_d1, c_d2 = st.columns(2)
 with c_d1:
     input_date = st.date_input("入力日", datetime.now(), key="input_date")
@@ -100,6 +91,7 @@ with c_d2:
     st.markdown(f'<div class="result-box">{day_name}</div>', unsafe_allow_html=True)
     st.session_state.display_day = day_name
 
+# 2. 拠点選択
 c_a1, c_a2 = st.columns(2)
 with c_a1:
     st.selectbox("エリア", list(area_data.keys()), key="area")
@@ -108,6 +100,7 @@ with c_a2:
 
 st.divider()
 
+# 3. 生産数
 col1, col2, col3 = st.columns(3)
 with col1:
     st.number_input("立体", min_value=0, step=1, key="ritai")
@@ -123,6 +116,7 @@ with col3:
 
 st.divider()
 
+# 4. 労働時間と結果
 col_l, col_r = st.columns(2)
 with col_l:
     st.selectbox("⏰ 総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
@@ -134,8 +128,16 @@ with col_r:
 
 st.divider()
 
+# 5. ボタン
 btn1, btn2 = st.columns(2)
 with btn1:
     st.button("保存する", use_container_width=True, on_click=save_data, disabled=(total_qty == 0 or float(st.session_state.work_h) == 0))
 with btn2:
-    st.button("キャンセル", use_container_width=True, on_click=clear_inputs)
+    if st.button("キャンセル", use_container_width=True):
+        st.session_state.ritai = 0
+        st.session_state.heimen = 0
+        st.session_state.zubon = 0
+        st.session_state.yshirt = 0
+        st.session_state.press = 0
+        st.session_state.work_h = "0.0"
+        st.rerun()
