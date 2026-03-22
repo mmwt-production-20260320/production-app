@@ -1,162 +1,160 @@
 import streamlit as st
-import pandas as pd
-from datetime import datetime
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-# --- 0. 設定情報 (GitHubのSecretsに登録した名前と合わせる) ---
-SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
+from datetime import datetime
 
+# --- 1. ページ設定とデザイン (CSS) ---
+st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
+
+st.markdown("""
+    <style>
+    /* 全体の文字サイズと余白 */
+    html, body, [data-testid="stWidgetLabel"] p { font-size: 15px !important; }
+    h1 { font-size: 22px !important; text-align: center; margin-bottom: 20px; }
+    
+    /* 計算結果を表示する黒いボックス */
+    .result-box {
+        background-color: #262730; 
+        color: #ffffff; 
+        border: 1px solid rgba(250, 250, 250, 0.2); 
+        border-radius: 0.5rem; 
+        height: 42px; 
+        display: flex; 
+        align-items: center; 
+        padding: 0px 12px; 
+        font-size: 16px; 
+        font-weight: bold; 
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    /* 入力欄の高さを統一 */
+    div[data-baseweb="input"], div[data-baseweb="select"] {
+        min-height: 42px !important;
+    }
+    
+    /* 不要なメニュー類を隠してスッキリ */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. スプレッドシート保存関数 ---
 def save_to_sheets(data_list):
-    """Secretsを使ってスプレッドシートに保存する"""
     try:
-        # スプレッドシートのID（URLのd/〜/editの間にある文字）
+        # スプレッドシートのID
         SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
-        
-        # Secretsに登録した [gcp_service_account] を読み込む
+        # Secretsから鍵を読み込む
         creds_dict = st.secrets["gcp_service_account"]
         client = gspread.service_account_from_dict(creds_dict)
-        
-        # シートを開いて末尾に追加
+        # 1枚目のシートを開く
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         sheet.append_row(data_list)
         return True
     except Exception as e:
         st.error(f"保存エラーが発生しました: {e}")
         return False
-        
-# --- 2. ページ設定とCSS ---
-st.set_page_config(page_title="生産管理システム", layout="centered")
 
-st.markdown("""
-    <style>
-    html, body, [data-testid="stWidgetLabel"] p, .stNumberInput input, .stTextInput input {
-        font-size: 16px !important;
-    }
-    .main-title {
-        font-size: 26px !important; 
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    [data-testid="stHorizontalBlock"] {
-        align-items: flex-start !important;
-    }
-    div[data-baseweb="input"], div[data-baseweb="select"] {
-        min-height: 45px !important;
-        height: 45px !important;
-    }
-    .stButton button {
-        width: 100%;
-        height: 50px;
-        font-size: 18px !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 3. セッション状態の初期化 ---
-if 'confirm' not in st.session_state:
-    st.session_state.confirm = False
-
+# --- 3. リセット関数 (画面上の項目とkeyを完全一致) ---
 def reset_all_fields():
-    # キーの名前を、入力欄の key="..." で指定したものと完全に一致させます
-    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"] 
-    for key in keys:
-        if key in st.session_state:
-            # 労働時間(work_h)は小数、それ以外は整数でリセット
-            st.session_state[key] = 0.0 if key == "work_h" else 0
+    # 入力項目の key と完全に一致させてエラーを防止
+    target_keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
+    for k in target_keys:
+        if k in st.session_state:
+            # 労働時間だけ小数、他は整数
+            st.session_state[k] = 0.0 if k == "work_h" else 0
     st.session_state.confirm = False
-    
-# --- 4. 画面構成 ---
-st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    input_date = st.date_input("入力日", datetime.now())
-with col2:
-    weekday_map = ["月", "火", "水", "木", "金", "土", "日"]
-    current_weekday = weekday_map[input_date.weekday()]
-    st.text_input("曜日", value=current_weekday, disabled=True)
+# --- 4. メイン画面の構成 ---
+st.title("生産管理入力システム")
 
-# エリアと工場の対応データ
+# 日付と曜日
+col_d1, col_d2 = st.columns(2)
+with col_d1:
+    input_date = st.date_input("入力日", datetime.now(), key="input_date")
+with col_d2:
+    weekday_list = ["月","火","水","木","金","土","日"]
+    weekday = weekday_list[input_date.weekday()]
+    st.markdown("曜日")
+    st.markdown(f'<div class="result-box">{weekday}</div>', unsafe_allow_html=True)
+
+# エリア・工場名の連動
 area_options = {
     "盛岡": ["滝沢", "都南", "南", "矢巾"],
     "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]
 }
+col_a1, col_a2 = st.columns(2)
+with col_a1:
+    sel_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
+with col_a2:
+    # 選んだエリアによって工場のリストを自動切り替え
+    sel_factory = st.selectbox("工場名", area_options[sel_area], key="factory_select")
 
-col3, col4 = st.columns(2)
-with col3:
-    # 1. まずエリアを選択
-    selected_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
+st.divider()
 
-with col4:
-    # 2. 選ばれたエリアに対応する工場のリストを取得
-    factory_list = area_options[selected_area]
-    # 3. そのリストを使って工場名を選択
-    factory = st.selectbox("工場名", factory_list, key="factory_select")
-st.markdown("---")
+# 生産数の入力（3列で配置）
+c1, c2, c3 = st.columns(3)
+with c1:
+    val_ritai = st.number_input("立体", min_value=0, key="立体")
+    val_heimen = st.number_input("平面", min_value=0, key="平面")
+with c2:
+    val_zubon = st.number_input("ズボン", min_value=0, key="ズボン")
+    val_yshirt = st.number_input("Yシャツ", min_value=0, key="Yシャツ")
+with c3:
+    val_press = st.number_input("プレス", min_value=0, key="プレス")
+    # 合計計算
+    total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
+    st.markdown("5項目合計")
+    st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
 
-col5, col6, col7 = st.columns(3)
-with col5:
-    ritai = st.number_input("立体", min_value=0, key="立体")
-with col6:
-    zubon = st.number_input("ズボン", min_value=0, key="ズボン")
-with col7:
-    press = st.number_input("プレス", min_value=0, key="プレス")
+st.divider()
 
-col8, col9, col10 = st.columns(3)
-with col8:
-    heimen = st.number_input("平面", min_value=0, key="平面")
-with col9:
-    yshirt = st.number_input("Yシャツ", min_value=0, key="Yシャツ")
-with col10:
-    total_val = ritai + zubon + press + heimen + yshirt
-    st.number_input("5項目合計", value=total_val, disabled=True)
+# 労働時間と生産点数
+col_l, col_r = st.columns(2)
+with col_l:
+    # 0.0〜10.0h まで 0.5刻みで選択
+    val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(0, 21)], key="work_h")
+with col_r:
+    # 生産性の計算 (0除算を防止)
+    val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
+    st.markdown("人時生産点数")
+    st.markdown(f'<div class="result-box">{val_prod}</div>', unsafe_allow_html=True)
 
-col11, col12 = st.columns(2)
-with col11:
-    hour_list = [round(x * 0.1, 1) for x in range(0, 241, 5)]
-    work_hours = st.selectbox("総労働時間 (h)", hour_list, key="総労働時間")
-with col12:
-    productivity = round(total_val / work_hours, 2) if work_hours > 0 else 0
-    st.number_input("人時生産点数", value=productivity, disabled=True)
+st.divider()
 
-st.markdown("---")
-
-# --- 5. 保存・キャンセルボタンの制御 ---
-if not st.session_state.confirm:
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("保存する"):
-            if total_val == 0 or work_hours == 0:
-                st.error("入力が不足しているため保存できません。")
-            else:
+# --- 5. 保存・キャンセルボタン ---
+if not st.session_state.get('confirm', False):
+    btn_save, btn_cancel = st.columns(2)
+    with btn_save:
+        # 合計または時間が0の場合は押せないようにチェック
+        if st.button("保存する", use_container_width=True):
+            if total_val > 0 and val_work_h > 0:
                 st.session_state.confirm = True
                 st.rerun()
-    with c2:
-        if st.button("キャンセル"):
+            else:
+                st.error("入力が不足しています")
+    with btn_cancel:
+        if st.button("キャンセル", use_container_width=True):
             reset_all_fields()
             st.rerun()
 
-# --- 6. 確認メッセージと保存実行 ---
-if st.session_state.confirm:
+# 最終確認画面
+if st.session_state.get('confirm', False):
     st.warning("この内容で保存してよろしいですか？")
-    conf_c1, conf_c2 = st.columns(2)
-    with conf_c1:
-        if st.button("はい（確定）"):
-            # 書き込むデータの並びを作成
-            new_data = [
-                str(input_date), current_weekday, area, factory, 
-                ritai, zubon, press, heimen, yshirt, total_val, 
-                work_hours, productivity
+    conf1, conf2 = st.columns(2)
+    with conf1:
+        if st.button("はい（確定）", use_container_width=True):
+            # スプレッドシートへ送るデータの並び
+            new_row_data = [
+                str(input_date), weekday, sel_area, sel_factory,
+                val_ritai, val_heimen, val_zubon, val_yshirt, val_press, 
+                total_val, val_work_h, val_prod
             ]
-            
-            # 保存実行
-            if save_to_sheets(new_data):
-                st.success("スプレッドシートに正常に追加されました。")
+            if save_to_sheets(new_row_data):
+                st.success("✅ スプレッドシートに保存しました！")
                 reset_all_fields()
                 st.rerun()
-            
-    with conf_c2:
-        if st.button("いいえ（戻る）"):
-            reset_all_fields()
+    with conf2:
+        if st.button("いいえ（戻る）", use_container_width=True):
+            st.session_state.confirm = False
             st.rerun()
