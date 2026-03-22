@@ -113,7 +113,7 @@ st.divider()
 # 3. 労働時間と生産点数
 col_left, col_right = st.columns(2)
 with col_left:
-    work_options = ["0.0", "3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"]
+    work_options = ["0.0", "30.0", "30.5", "40.0", "40.5", "50.0", "50.5", "60.0", "60.5", "70.0"]
     selected_h = st.selectbox("⏰ 総労働時間 (h)", options=work_options, key="work_h")
 with col_right:
     w_h_val = float(selected_h)
