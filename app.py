@@ -5,15 +5,15 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- デザイン調整 (下基準・サイズ統一) ---
+# --- デザイン調整 (上揃え・余白追加) ---
 st.markdown("""
     <style>
-    /* 全体の文字サイズを工場名（標準）に統一 */
+    /* 全体の文字サイズ統一 */
     html, body, [class*="css"], .stWidgetLabel p, .stMarkdown p {
         font-size: 15px !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 6px !important; /* ラベル下の余白を少し広げた */
     }
-    h1 { font-size: 20px !important; text-align: center; margin-bottom: 15px !important; }
+    h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
 
     /* ボックスの高さを42pxで統一 */
     .stNumberInput input, .stSelectbox div, .stDateInput input {
@@ -38,14 +38,27 @@ st.markdown("""
         width: 100%;
     }
     
-    /* すべてのカラムを下辺基準で整列 */
+    /* 【修正】すべてのカラムを「上基準」で整列 */
     [data-testid="column"] {
         display: flex;
         flex-direction: column;
-        justify-content: flex-end !important;
+        justify-content: flex-start !important; /* 上揃えに変更 */
     }
-    div[data-testid="stVerticalBlock"] { gap: 0.8rem !important; }
-    hr { margin: 15px 0 !important; }
+
+    /* ボックス同士の横の間隔を広げる */
+    div[data-testid="column"] {
+        padding-right: 15px !important; 
+    }
+    div[data-testid="column"]:last-child {
+        padding-right: 0px !important;
+    }
+
+    /* 縦方向のブロック間の余白 */
+    div[data-testid="stVerticalBlock"] {
+        gap: 1.2rem !important; 
+    }
+
+    hr { margin: 20px 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -68,7 +81,7 @@ def save_data():
                    st.session_state.yshirt, st.session_state.press, t_qty, w_h, round(t_qty/w_h, 2)]
         sheet.append_row(new_row)
         st.success("✅ データを保存しました。")
-        # リセット処理
+        # 状態リセット
         st.session_state.ritai = 0
         st.session_state.heimen = 0
         st.session_state.zubon = 0
@@ -119,7 +132,8 @@ st.divider()
 # 4. 労働時間と結果
 col_l, col_r = st.columns(2)
 with col_l:
-    st.selectbox("⏰ 総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
+    # ⏰マークを一旦外し、高さを右側と完全に合わせる
+    st.selectbox("総労働時間 (h)", ["0.0","3.0","3.5","4.0","4.5","5.0","5.5","6.0","6.5","7.0"], key="work_h")
 with col_r:
     w_h_val = float(st.session_state.work_h)
     prod = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
