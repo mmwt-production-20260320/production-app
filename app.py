@@ -4,11 +4,6 @@ from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# --- 1. Google Sheets 接続設定 ---
-# ここには信さんが2日前に用意したJSONファイル名を指定してください
-SERVICE_ACCOUNT_FILE = 'secret_key.json' # ←ここを実際のファイル名に変更！
-SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'  # ←スプレッドシートのURLにある長いIDを記入
-
 def save_to_sheets(data_list):
     """スプレッドシートの末尾にデータを追加する関数"""
     try:
