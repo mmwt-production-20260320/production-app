@@ -69,7 +69,6 @@ def reset_all_fields():
                 st.session_state[key] = 0
     # 確認フラグもオフにする
     st.session_state.confirm = False
-
 # --- 4. 画面構成 ---
 st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
