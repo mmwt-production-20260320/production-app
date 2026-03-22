@@ -5,22 +5,24 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- スマホ向けCSS ---
+# --- スマホ向けCSS (見た目を統一) ---
 st.markdown("""
     <style>
     h1 { font-size: 18px !important; text-align: center; }
     html, body, [class*="css"], div[data-testid="stWidgetLabel"] p { font-size: 13px !important; margin-bottom: -15px !important; }
-    .stNumberInput input { font-size: 16px !important; }
-    /* 数値表示用のおしゃれな枠 */
-    .metric-container {
-        background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 10px;
-        text-align: center;
-        margin-top: 10px;
+    .stNumberInput input, .stSelectbox div { font-size: 16px !important; }
+    hr { margin: 10px 0 !important; }
+    /* 合計と点数を入力欄のように見せる設定 */
+    .custom-box {
+        background-color: #ffffff;
+        border: 1px solid #dcdfe3;
+        border-radius: 4px;
+        padding: 8px;
+        height: 38px;
+        font-size: 16px;
+        line-height: 22px;
+        color: #31333f;
     }
-    .metric-label { font-size: 12px; color: #5f6368; }
-    .metric-value { font-size: 20px; font-weight: bold; color: #1f77b4; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -35,16 +37,26 @@ area_data = {
     "花巻": ["桜木", "藤沢", "北上", "特殊", "江釣子", "水沢", "一関"]
 }
 
-# --- 保存とリセットの関数 ---
-def save_and_reset():
-    # セッションから値を取得
+# --- 初期状態のセットアップ ---
+input_keys = ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]
+for k in input_keys:
+    if k not in st.session_state:
+        st.session_state[k] = "0.0" if k == "work_h" else 0
+
+# --- 関数：リセット処理 ---
+def clear_inputs():
+    st.session_state.ritai = 0
+    st.session_state.heimen = 0
+    st.session_state.zubon = 0
+    st.session_state.yshirt = 0
+    st.session_state.press = 0
+    st.session_state.work_h = "0.0"
+
+# --- 関数：保存処理 ---
+def save_data():
     t_qty = st.session_state.ritai + st.session_state.heimen + st.session_state.zubon + st.session_state.yshirt + st.session_state.press
     w_h = float(st.session_state.work_h)
     
-    if w_h <= 0:
-        st.error("⚠️ 労働時間を選択してください")
-        return
-
     try:
         sheet = get_sheet()
         now = datetime.now()
@@ -60,20 +72,15 @@ def save_and_reset():
             st.session_state.yshirt, st.session_state.press,
             t_qty, w_h, prod
         ]
-        
         sheet.append_row(new_row)
-        st.toast("✅ 保存しました！")
         
-        # リセット
-        st.session_state.ritai = 0
-        st.session_state.heimen = 0
-        st.session_state.zubon = 0
-        st.session_state.yshirt = 0
-        st.session_state.press = 0
-        st.session_state.work_h = "0.0"
+        # 保存完了後のメッセージとリセット
+        st.success("✅ 本日のデータを記録しました。")
+        st.balloons()
+        clear_inputs()
         
     except Exception as e:
-        st.error(f"❌ エラー: {e}")
+        st.error(f"❌ 保存に失敗しました: {e}")
 
 # --- メイン画面 ---
 st.title("🏭 生産管理入力フォーム")
@@ -87,7 +94,7 @@ with c2:
 
 st.divider()
 
-# 2. 生産数入力と合計表示のレイアウト
+# 2. 生産数入力と合計表示
 col1, col2, col3 = st.columns(3)
 with col1:
     ritai = st.number_input("立体", min_value=0, step=1, key="ritai")
@@ -96,52 +103,33 @@ with col2:
     zubon = st.number_input("ズボン", min_value=0, step=1, key="zubon")
     yshirt = st.number_input("Yシャツ", min_value=0, step=1, key="yshirt")
 with col3:
-    press = st.number_input("プレス", min_value=0, step=1, key="press")
-    # プレス下・Yシャツ右のスペースに合計を表示
-    total_qty = ritai + heimen + zubon + yshirt + press
-    st.markdown(f"""
-        <div class="metric-container">
-            <div class="metric-label">5項目合計</div>
-            <div class="metric-value">{total_qty}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.number_input("プレス", min_value=0, step=1, key="press")
+    total_qty = ritai + heimen + zubon + yshirt + st.session_state.press
+    st.markdown("5項目合計")
+    st.markdown(f'<div class="custom-box">{total_qty}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# 3. 労働時間（プルダウン）と生産点数（横並び）
+# 3. 労働時間と生産点数
 col_left, col_right = st.columns(2)
-
 with col_left:
-    # 労働時間の選択肢（初期値を0にするためリストの先頭に"0.0"を追加）
     work_options = ["0.0", "3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"]
     selected_h = st.selectbox("⏰ 総労働時間 (h)", options=work_options, key="work_h")
-    st.caption("※10進数で選択")
-
 with col_right:
-    # 人時生産点数の計算と表示
     w_h_val = float(selected_h)
     productivity = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
-    st.markdown(f"""
-        <div class="metric-container">
-            <div class="metric-label">人時生産点数</div>
-            <div class="metric-value">{productivity}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("人時生産点数")
+    st.markdown(f'<div class="custom-box">{productivity}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# 4. 保存ボタン
-# 労働時間が0または合計が0の場合は警告表示
-if total_qty == 0 or float(selected_h) == 0:
-    st.warning("⚠️ 数値と労働時間を入力してください")
-    st.button("この内容で保存 💾", use_container_width=True, disabled=True)
-else:
-    st.button("この内容で保存 💾", use_container_width=True, on_click=save_and_reset)
+# 4. ボタン配置（横並び）
+btn_save, btn_cancel = st.columns(2)
 
-# 履歴表示
-if st.button("📊 最新の5件を表示"):
-    try:
-        data = get_sheet().get_all_values()
-        st.table(data[-5:])
-    except:
-        st.error("読込失敗")
+with btn_save:
+    # 労働時間が0または合計が0の時は無効化
+    is_invalid = (total_qty == 0 or float(selected_h) == 0)
+    st.button("保存する", use_container_width=True, on_click=save_data, disabled=is_invalid)
+
+with btn_cancel:
+    st.button("キャンセル", use_container_width=True, on_click=clear_inputs)
