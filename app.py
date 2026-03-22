@@ -80,12 +80,22 @@ with col2:
     current_weekday = weekday_map[input_date.weekday()]
     st.text_input("曜日", value=current_weekday, disabled=True)
 
+# エリアと工場の対応データ
+area_options = {
+    "盛岡": ["滝沢", "都南", "南", "矢巾"],
+    "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]
+}
+
 col3, col4 = st.columns(2)
 with col3:
-    area = st.selectbox("エリア", ["盛岡", "滝沢", "北上"], key="area_select")
-with col4:
-    factory = st.selectbox("工場名", ["滝沢", "盛岡中央", "青山"], key="factory_select")
+    # 1. まずエリアを選択
+    selected_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
 
+with col4:
+    # 2. 選ばれたエリアに対応する工場のリストを取得
+    factory_list = area_options[selected_area]
+    # 3. そのリストを使って工場名を選択
+    factory = st.selectbox("工場名", factory_list, key="factory_select")
 st.markdown("---")
 
 col5, col6, col7 = st.columns(3)
