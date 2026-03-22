@@ -5,23 +5,27 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- スマホ向けCSS (見た目を統一) ---
+# --- スマホ向けCSS (見た目の微調整) ---
 st.markdown("""
     <style>
-    h1 { font-size: 18px !important; text-align: center; }
+    h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
     html, body, [class*="css"], div[data-testid="stWidgetLabel"] p { font-size: 13px !important; margin-bottom: -15px !important; }
     .stNumberInput input, .stSelectbox div { font-size: 16px !important; }
     hr { margin: 10px 0 !important; }
-    /* 合計と点数を入力欄のように見せる設定 */
-    .custom-box {
-        background-color: #ffffff;
+    
+    /* 計算結果表示用のボックス（薄い緑色・高さ統一） */
+    .result-box {
+        background-color: #e6ffed; /* 薄い緑 */
         border: 1px solid #dcdfe3;
         border-radius: 4px;
-        padding: 8px;
-        height: 38px;
+        padding: 8px 12px;
+        height: 42px; /* 他の入力欄と高さを揃える */
         font-size: 16px;
-        line-height: 22px;
-        color: #31333f;
+        font-weight: bold;
+        line-height: 24px;
+        color: #1a7f37;
+        display: flex;
+        align-items: center;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -38,10 +42,8 @@ area_data = {
 }
 
 # --- 初期状態のセットアップ ---
-input_keys = ["ritai", "heimen", "zubon", "yshirt", "press", "work_h"]
-for k in input_keys:
-    if k not in st.session_state:
-        st.session_state[k] = "0.0" if k == "work_h" else 0
+if "work_h" not in st.session_state:
+    st.session_state.work_h = "0.0"
 
 # --- 関数：リセット処理 ---
 def clear_inputs():
@@ -74,7 +76,6 @@ def save_data():
         ]
         sheet.append_row(new_row)
         
-        # 保存完了後のメッセージとリセット
         st.success("✅ 本日のデータを記録しました。")
         st.balloons()
         clear_inputs()
@@ -83,7 +84,7 @@ def save_data():
         st.error(f"❌ 保存に失敗しました: {e}")
 
 # --- メイン画面 ---
-st.title("🏭 生産管理入力フォーム")
+st.title("生産管理入力") # タイトルを短縮
 
 # 1. エリア・工場名
 c1, c2 = st.columns(2)
@@ -103,33 +104,30 @@ with col2:
     zubon = st.number_input("ズボン", min_value=0, step=1, key="zubon")
     yshirt = st.number_input("Yシャツ", min_value=0, step=1, key="yshirt")
 with col3:
-    st.number_input("プレス", min_value=0, step=1, key="press")
-    total_qty = ritai + heimen + zubon + yshirt + st.session_state.press
+    press = st.number_input("プレス", min_value=0, step=1, key="press")
+    total_qty = ritai + heimen + zubon + yshirt + press
     st.markdown("5項目合計")
-    st.markdown(f'<div class="custom-box">{total_qty}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="result-box">{total_qty}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# 3. 労働時間と生産点数
+# 3. 労働時間と人時生産点数
 col_left, col_right = st.columns(2)
 with col_left:
-    work_options = ["0.0", "30.0", "30.5", "40.0", "40.5", "50.0", "50.5", "60.0", "60.5", "70.0"]
+    work_options = ["0.0", "3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"]
     selected_h = st.selectbox("⏰ 総労働時間 (h)", options=work_options, key="work_h")
 with col_right:
     w_h_val = float(selected_h)
     productivity = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
     st.markdown("人時生産点数")
-    st.markdown(f'<div class="custom-box">{productivity}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="result-box">{productivity}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# 4. ボタン配置（横並び）
+# 4. ボタン配置
 btn_save, btn_cancel = st.columns(2)
-
 with btn_save:
-    # 労働時間が0または合計が0の時は無効化
     is_invalid = (total_qty == 0 or float(selected_h) == 0)
     st.button("保存する", use_container_width=True, on_click=save_data, disabled=is_invalid)
-
 with btn_cancel:
     st.button("キャンセル", use_container_width=True, on_click=clear_inputs)
