@@ -47,7 +47,7 @@ st.markdown("""
 
     /* ボックス同士の横の間隔を広げる */
     div[data-testid="column"] {
-        padding-right: 15px !important; 
+        padding-right: 18px !important; 
     }
     div[data-testid="column"]:last-child {
         padding-right: 0px !important;
@@ -148,10 +148,11 @@ with btn1:
     st.button("保存する", use_container_width=True, on_click=save_data, disabled=(total_qty == 0 or float(st.session_state.work_h) == 0))
 with btn2:
     if st.button("キャンセル", use_container_width=True):
-        st.session_state.ritai = 0
-        st.session_state.heimen = 0
-        st.session_state.zubon = 0
-        st.session_state.yshirt = 0
-        st.session_state.press = 0
-        st.session_state.work_h = "0.0"
+        st.rerun()
+        st.session_state.ritai = ""
+        st.session_state.heimen = ""
+        st.session_state.zubon = ""
+        st.session_state.yshirt = ""
+        st.session_state.press = ""
+        st.session_state.work_h = ""
         st.rerun()
