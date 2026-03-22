@@ -1,11 +1,30 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-# --- ページ設定 ---
+# --- 1. Google Sheets 接続設定 ---
+# ここには信さんが2日前に用意したJSONファイル名を指定してください
+SERVICE_ACCOUNT_FILE = 'secret_key.json' # ←ここを実際のファイル名に変更！
+SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'  # ←スプレッドシートのURLにある長いIDを記入
+
+def save_to_sheets(data_list):
+    """スプレッドシートの末尾にデータを追加する関数"""
+    try:
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        creds = ServiceAccountCredentials.from_json_keyfile_name(SERVICE_ACCOUNT_FILE, scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key(SPREADSHEET_KEY).sheet1 # 1枚目のシート
+        sheet.append_row(data_list)
+        return True
+    except Exception as e:
+        st.error(f"保存エラー: {e}")
+        return False
+
+# --- 2. ページ設定とCSS ---
 st.set_page_config(page_title="生産管理システム", layout="centered")
 
-# --- スタイル定義 (CSS) ---
 st.markdown("""
     <style>
     html, body, [data-testid="stWidgetLabel"] p, .stNumberInput input, .stTextInput input {
@@ -32,22 +51,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- セッション状態の初期化 ---
+# --- 3. セッション状態の初期化 ---
 if 'confirm' not in st.session_state:
     st.session_state.confirm = False
 
 def reset_all_fields():
-    """安全にすべての入力値を初期化する"""
     keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "総労働時間"]
     for key in keys:
         if key in st.session_state:
             st.session_state[key] = 0.0 if key == "総労働時間" else 0
     st.session_state.confirm = False
 
-# --- 画面構成 ---
+# --- 4. 画面構成 ---
 st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
-# 1段目：日付と曜日
 col1, col2 = st.columns(2)
 with col1:
     input_date = st.date_input("入力日", datetime.now())
@@ -56,7 +73,6 @@ with col2:
     current_weekday = weekday_map[input_date.weekday()]
     st.text_input("曜日", value=current_weekday, disabled=True)
 
-# 2段目：エリアと工場名
 col3, col4 = st.columns(2)
 with col3:
     area = st.selectbox("エリア", ["盛岡", "滝沢", "北上"], key="area_select")
@@ -65,7 +81,6 @@ with col4:
 
 st.markdown("---")
 
-# 3段目：生産項目（上段）
 col5, col6, col7 = st.columns(3)
 with col5:
     ritai = st.number_input("立体", min_value=0, key="立体")
@@ -74,7 +89,6 @@ with col6:
 with col7:
     press = st.number_input("プレス", min_value=0, key="プレス")
 
-# 4段目：生産項目（下段）と合計
 col8, col9, col10 = st.columns(3)
 with col8:
     heimen = st.number_input("平面", min_value=0, key="平面")
@@ -84,7 +98,6 @@ with col10:
     total_val = ritai + zubon + press + heimen + yshirt
     st.number_input("5項目合計", value=total_val, disabled=True)
 
-# 5段目：労働時間と人時生産点数
 col11, col12 = st.columns(2)
 with col11:
     hour_list = [round(x * 0.1, 1) for x in range(0, 241, 5)]
@@ -95,15 +108,13 @@ with col12:
 
 st.markdown("---")
 
-# --- 保存・キャンセルボタンの制御 ---
+# --- 5. 保存・キャンセルボタンの制御 ---
 if not st.session_state.confirm:
     c1, c2 = st.columns(2)
     with c1:
         if st.button("保存する"):
-            if total_val == 0:
-                st.error("生産項目が入力されていないため保存できません。")
-            elif work_hours == 0:
-                st.error("総労働時間が入力されていないため保存できません。")
+            if total_val == 0 or work_hours == 0:
+                st.error("入力が不足しているため保存できません。")
             else:
                 st.session_state.confirm = True
                 st.rerun()
@@ -112,16 +123,24 @@ if not st.session_state.confirm:
             reset_all_fields()
             st.rerun()
 
-# --- 確認メッセージと実行 ---
+# --- 6. 確認メッセージと保存実行 ---
 if st.session_state.confirm:
     st.warning("この内容で保存してよろしいですか？")
     conf_c1, conf_c2 = st.columns(2)
     with conf_c1:
         if st.button("はい（確定）"):
-            # TODO: ここにスプレッドシートへの保存コードを記述
-            st.success("スプレッドシートに追加しました！")
-            reset_all_fields()
-            st.rerun()
+            # 書き込むデータの並びを作成
+            new_data = [
+                str(input_date), current_weekday, area, factory, 
+                ritai, zubon, press, heimen, yshirt, total_val, 
+                work_hours, productivity
+            ]
+            
+            # 保存実行
+            if save_to_sheets(new_data):
+                st.success("スプレッドシートに正常に追加されました。")
+                reset_all_fields()
+                st.rerun()
             
     with conf_c2:
         if st.button("いいえ（戻る）"):
