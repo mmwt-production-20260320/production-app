@@ -5,36 +5,43 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- スマホ向けCSS (デザインの完全統一) ---
+# --- スマホ向けCSS (ミリ単位のデザイン調整) ---
 st.markdown("""
     <style>
     h1 { font-size: 20px !important; text-align: center; margin-bottom: 10px !important; }
     html, body, [class*="css"], div[data-testid="stWidgetLabel"] p { font-size: 13px !important; margin-bottom: -15px !important; }
     
-    /* 入力欄と表示ボックスの共通スタイル */
+    /* 入力欄（白い文字の方）の高さ設定 */
     .stNumberInput input, .stSelectbox div, .stDateInput input {
+        height: 40px !important;
         font-size: 16px !important;
-        height: 45px !important; /* 標準ボックスの高さを固定 */
     }
 
-    /* 計算結果ボックスを標準の入力欄に完全に合わせる */
+    /* 自作ボックス（黒い背景の方）を標準に完全に合わせる */
     .result-box {
         background-color: #262730; 
         color: #ffffff;
         border: 1px solid rgba(250, 250, 250, 0.2); 
         border-radius: 0.5rem;
         padding: 0px 12px;
-        /* 標準のnumber_input等と高さを揃えるための設定 */
-        height: 45px !important; 
-        min-height: 45px !important;
-        margin-top: 1px; /* 微調整 */
+        /* 高さを標準の40pxに固定 */
+        height: 40px !important; 
+        min-height: 40px !important;
+        /* 縦方向の中央揃えを完璧にする */
+        display: flex;
+        align-items: center; 
         font-size: 16px;
         font-weight: bold;
-        display: flex;
-        align-items: center;
         box-sizing: border-box;
         width: 100%;
+        margin-top: 1px; /* 上下の微細なズレ調整 */
     }
+    
+    /* ラベルとボックスの間の隙間を統一 */
+    div[data-testid="stMarkdownContainer"] p {
+        margin-bottom: 5px !important;
+    }
+    
     hr { margin: 10px 0 !important; }
     </style>
     """, unsafe_allow_html=True)
