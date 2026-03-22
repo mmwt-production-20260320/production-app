@@ -14,21 +14,26 @@ st.markdown("""
     /* 入力欄と表示ボックスの共通スタイル */
     .stNumberInput input, .stSelectbox div, .stDateInput input {
         font-size: 16px !important;
+        height: 45px !important; /* 標準ボックスの高さを固定 */
     }
 
-    /* 計算結果ボックスを標準の入力欄（黒系）に擬態させる */
+    /* 計算結果ボックスを標準の入力欄に完全に合わせる */
     .result-box {
-        background-color: #262730; /* Streamlit標準のダーク背景色 */
+        background-color: #262730; 
         color: #ffffff;
-        border: 1px solid rgba(250, 250, 250, 0.2); /* 標準の枠線色 */
+        border: 1px solid rgba(250, 250, 250, 0.2); 
         border-radius: 0.5rem;
         padding: 0px 12px;
-        height: 45px; /* 白いボックスの高さに調整 */
+        /* 標準のnumber_input等と高さを揃えるための設定 */
+        height: 45px !important; 
+        min-height: 45px !important;
+        margin-top: 1px; /* 微調整 */
         font-size: 16px;
         font-weight: bold;
         display: flex;
         align-items: center;
         box-sizing: border-box;
+        width: 100%;
     }
     hr { margin: 10px 0 !important; }
     </style>
@@ -88,7 +93,7 @@ def save_data():
 # --- メイン画面 ---
 st.title("生産管理入力")
 
-# 追加：1. 日付と曜日
+# 1. 日付と曜日
 d_col1, d_col2 = st.columns(2)
 with d_col1:
     input_date = st.date_input("入力日", datetime.now(), key="input_date")
