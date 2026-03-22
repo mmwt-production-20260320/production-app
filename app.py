@@ -5,28 +5,32 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- スマホ向けCSS (見た目の微調整) ---
+# --- スマホ向けCSS (デザインの完全統一) ---
 st.markdown("""
     <style>
-    h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
+    h1 { font-size: 20px !important; text-align: center; margin-bottom: 10px !important; }
     html, body, [class*="css"], div[data-testid="stWidgetLabel"] p { font-size: 13px !important; margin-bottom: -15px !important; }
-    .stNumberInput input, .stSelectbox div { font-size: 16px !important; }
-    hr { margin: 10px 0 !important; }
     
-    /* 計算結果表示用のボックス（薄い緑色・高さ統一） */
+    /* 入力欄と表示ボックスの共通スタイル */
+    .stNumberInput input, .stSelectbox div, .stDateInput input {
+        font-size: 16px !important;
+    }
+
+    /* 計算結果ボックスを標準の入力欄（黒系）に擬態させる */
     .result-box {
-        background-color: #e6ffed; /* 薄い緑 */
-        border: 1px solid #dcdfe3;
-        border-radius: 4px;
-        padding: 8px 12px;
-        height: 42px; /* 他の入力欄と高さを揃える */
+        background-color: #262730; /* Streamlit標準のダーク背景色 */
+        color: #ffffff;
+        border: 1px solid rgba(250, 250, 250, 0.2); /* 標準の枠線色 */
+        border-radius: 0.5rem;
+        padding: 0px 12px;
+        height: 45px; /* 白いボックスの高さに調整 */
         font-size: 16px;
         font-weight: bold;
-        line-height: 24px;
-        color: #1a7f37;
         display: flex;
         align-items: center;
+        box-sizing: border-box;
     }
+    hr { margin: 10px 0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -61,10 +65,8 @@ def save_data():
     
     try:
         sheet = get_sheet()
-        now = datetime.now()
-        date_str = now.strftime("%Y-%m-%d")
-        weekday_list = ["月", "火", "水", "木", "金", "土", "日"]
-        day_of_week = weekday_list[now.weekday()]
+        date_str = st.session_state.input_date.strftime("%Y-%m-%d")
+        day_of_week = st.session_state.display_day
         
         prod = round(t_qty / w_h, 2)
         
@@ -84,9 +86,20 @@ def save_data():
         st.error(f"❌ 保存に失敗しました: {e}")
 
 # --- メイン画面 ---
-st.title("生産管理入力") # タイトルを短縮
+st.title("生産管理入力")
 
-# 1. エリア・工場名
+# 追加：1. 日付と曜日
+d_col1, d_col2 = st.columns(2)
+with d_col1:
+    input_date = st.date_input("入力日", datetime.now(), key="input_date")
+with d_col2:
+    weekday_list = ["月", "火", "水", "木", "金", "土", "日"]
+    day_name = weekday_list[input_date.weekday()]
+    st.markdown("曜日")
+    st.markdown(f'<div class="result-box">{day_name}</div>', unsafe_allow_html=True)
+    st.session_state.display_day = day_name
+
+# 2. エリア・工場名
 c1, c2 = st.columns(2)
 with c1:
     st.selectbox("エリア", list(area_data.keys()), key="area")
@@ -95,7 +108,7 @@ with c2:
 
 st.divider()
 
-# 2. 生産数入力と合計表示
+# 3. 生産数入力と合計表示
 col1, col2, col3 = st.columns(3)
 with col1:
     ritai = st.number_input("立体", min_value=0, step=1, key="ritai")
@@ -111,7 +124,7 @@ with col3:
 
 st.divider()
 
-# 3. 労働時間と人時生産点数
+# 4. 労働時間と人時生産点数
 col_left, col_right = st.columns(2)
 with col_left:
     work_options = ["0.0", "3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0"]
@@ -124,7 +137,7 @@ with col_right:
 
 st.divider()
 
-# 4. ボタン配置
+# 5. ボタン配置
 btn_save, btn_cancel = st.columns(2)
 with btn_save:
     is_invalid = (total_qty == 0 or float(selected_h) == 0)
