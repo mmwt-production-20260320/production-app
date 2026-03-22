@@ -58,17 +58,14 @@ if 'confirm' not in st.session_state:
     st.session_state.confirm = False
 
 def reset_all_fields():
-    # 書き換えたい項目のリスト
-    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "総労働時間"]
+    # キーの名前を、入力欄の key="..." で指定したものと完全に一致させます
+    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"] 
     for key in keys:
-        # その項目が今、画面上に存在するか確認してからリセットする（これが大事！）
         if key in st.session_state:
-            if key == "総労働時間":
-                st.session_state[key] = 0.0
-            else:
-                st.session_state[key] = 0
-    # 確認フラグもオフにする
+            # 労働時間(work_h)は小数、それ以外は整数でリセット
+            st.session_state[key] = 0.0 if key == "work_h" else 0
     st.session_state.confirm = False
+    
 # --- 4. 画面構成 ---
 st.markdown('<p class="main-title">生産管理入力</p>', unsafe_allow_html=True)
 
