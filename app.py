@@ -5,53 +5,50 @@ from datetime import datetime
 # --- ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- スマホ向けCSS (デザインの最終調整) ---
+# --- スマホ向けCSS (下基準で整列) ---
 st.markdown("""
     <style>
-    /* 全体のフォントサイズを「工場名」等の標準サイズに統一 */
+    /* 全体のフォントサイズ統一 */
     html, body, [class*="css"], .stWidgetLabel p, .stMarkdown p {
-        font-size: 15px !important; /* 工場名などのデフォルトに近いサイズ */
+        font-size: 15px !important;
         margin-bottom: 4px !important;
     }
 
     h1 { font-size: 20px !important; text-align: center; margin-bottom: 15px !important; }
 
-    /* 入力ボックス（白枠）の高さと中身の配置 */
+    /* ボックスの高さを42pxで統一 */
     .stNumberInput input, .stSelectbox div, .stDateInput input {
         height: 42px !important;
         font-size: 15px !important;
-        display: flex;
-        align-items: center;
     }
 
-    /* 自作ボックス（黒背景）を標準ボックスに「完全に」擬態させる */
+    /* 自作ボックスのデザインと上下中央配置 */
     .result-box {
         background-color: #262730; 
         color: #ffffff;
         border: 1px solid rgba(250, 250, 250, 0.2); 
         border-radius: 0.5rem;
-        
-        /* 高さを42pxで完全固定 */
         height: 42px !important; 
         min-height: 42px !important;
-        
-        /* 上下中央・左右の余白を標準に合わせる */
         display: flex;
         align-items: center; 
         padding: 0px 12px; 
-        
         font-size: 15px !important;
         font-weight: bold;
         box-sizing: border-box;
         width: 100%;
-        margin-top: 0px; 
     }
     
-    /* カラム間の微調整 */
-    [data-testid="column"] {
+    /* 【重要】カラムの中身を「下詰め」にする設定 */
+    [data-testid="stVerticalBlock"] > div > div > [data-testid="column"] {
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: flex-end !important;
+    }
+
+    /* 各要素の間の余白を調整 */
+    div[data-testid="stVerticalBlock"] {
+        gap: 0.5rem !important;
     }
 
     hr { margin: 15px 0 !important; }
@@ -156,7 +153,7 @@ with col_left:
 with col_right:
     w_h_val = float(selected_h)
     productivity = round(total_qty / w_h_val, 2) if w_h_val > 0 else 0
-    st.markdown("人時生産点数") # 文言を修正
+    st.markdown("人時生産点数")
     st.markdown(f'<div class="result-box">{productivity}</div>', unsafe_allow_html=True)
 
 st.divider()
