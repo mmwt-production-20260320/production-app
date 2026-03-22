@@ -16,9 +16,14 @@ st.markdown("""
     h1 { font-size: 20px !important; text-align: center; margin-bottom: 20px !important; }
 
     /* ボックスの高さを42pxで統一 */
-    .stNumberInput input, .stSelectbox div, .stDateInput input {
-        height: 42px !important;
-        font-size: 15px !important;
+    /* --- 修正後 --- */
+.stNumberInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {
+    height: 42px !important;
+    font-size: 15px !important;
+    display: flex !important;           /* 👈 これを追加：中身を自由に並べられるようにする */
+    align-items: center !important;    /* 👈 これを追加：上下の真ん中に寄せる */
+    line-height: normal !important;    /* 👈 これを追加：行の高さによるズレを防止 */
+}
     }
 
     /* 黒背景ボックスのデザイン */
