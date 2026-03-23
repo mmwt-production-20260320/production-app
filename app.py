@@ -79,7 +79,7 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存ボタン（エラーを完全に消し去る最終版） ---
+# --- 6. 保存ボタン（入力値を完全に空にする最終版） ---
 if not st.session_state.get('confirm', False):
     if st.button("保存する", use_container_width=True):
         if total_val > 0:
@@ -94,16 +94,22 @@ else:
         if st.button("はい（確定）", use_container_width=True, key="save_final"):
             new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
             if save_to_sheets(new_row):
+                # 【重要】保存成功直後に、裏側のデータをすべて削除します
+                for key in ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]:
+                    if key in st.session_state:
+                        # セッションから削除することで、初期値に戻るよう強制します
+                        del st.session_state[key]
+                
                 st.balloons()
-                # 💡 ここでリセット関数を直接呼ばず、一旦成功を表示
-                st.success("✅ 保存完了！")
-                # 💡 確認モードをオフにするだけ
+                st.success("✅ 保存完了！入力欄をリセットしました。")
                 st.session_state.confirm = False
-                # 💡 3秒待ってから自動でリフレッシュさせる（これでエラーが出なくなります）
+                
+                # 2秒待ってから画面を新しくして、真っさらな状態で表示
                 import time
                 time.sleep(2)
                 st.rerun()
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
+            st.rerun()
             st.rerun()
