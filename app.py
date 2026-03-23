@@ -2,105 +2,48 @@ import streamlit as st
 import gspread
 from datetime import datetime
 
-# --- 1. ページ設定 (タブに表示される名前など) ---
+# --- 1. ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- 2. デザイン (CSS) ★スマホで見やすく、黒ボックスを配置 ---
-st.markdown("""
-    <style>
-    /* メニュー類を隠してスッキリ */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* 全体の文字サイズ */
-    html, body, [data-testid="stWidgetLabel"] p {
-        font-size: 15px !important;
-    }
-    
-    /* タイトルのデザイン */
-    h1 {
-        font-size: 22px !important;
-        text-align: center;
-        margin-bottom: 25px !important;
-        color: #ffffff;
-    }
-
-    /* 計算結果を表示する黒いボックス */
-    .result-box {
-        background-color: #262730; 
-        color: #ffffff; 
-        border: 1px solid rgba(250, 250, 250, 0.2); 
-        border-radius: 0.5rem; 
-        height: 42px; 
-        display: flex; 
-        align-items: center; 
-        padding: 0px 12px; 
-        font-size: 16px; 
-        font-weight: bold; 
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* 入力欄の高さを42pxで統一 */
-    .stNumberInput input, .stSelectbox div[data-baseweb="select"], .stDateInput input {
-        height: 42px !important;
-        min-height: 42px !important;
-    }
-
-    /* カラムの余白 */
-    div[data-testid="column"] {
-        padding-bottom: 10px;
-    }
-
-    /* 区切り線の余白 */
-    hr {
-        margin: 1.5rem 0 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+# --- 2. デザイン (外部の style.css を読み込む) ---
+# 先ほど作った style.css をここで合体させます
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # --- 3. スプレッドシート保存関数 ---
 def save_to_sheets(data_list):
     try:
-        # スプレッドシートのID
         SPREADSHEET_KEY = '1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI'
-        # SecretsからJSONキーを読み込む
         creds_dict = st.secrets["gcp_service_account"]
         client = gspread.service_account_from_dict(creds_dict)
-        # 最初のシートを開く
         sheet = client.open_by_key(SPREADSHEET_KEY).sheet1
         sheet.append_row(data_list)
         return True
     except Exception as e:
-        st.error(f"保存エラーが発生しました: {e}")
+        st.error(f"保存エラー: {e}")
         return False
 
-# --- 4. リセット関数 (保存後に値を0に戻す) ---
+# --- 4. リセット関数 ---
 def reset_all_fields():
-    # 入力項目の key と完全に一致させる
-    target_keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
-    for k in target_keys:
+    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
+    for k in keys:
         if k in st.session_state:
-            # 労働時間(work_h)は小数、他は整数でリセット
             st.session_state[k] = 0.0 if k == "work_h" else 0
-    # 確認フラグをオフにする
     st.session_state.confirm = False
 
 # --- 5. メイン画面の構成 ---
 st.title("生産管理入力システム")
 
-# 日付と曜日（開いた時に今日の日付が自動で入ります）
+# 日付と曜日
 col_d1, col_d2 = st.columns(2)
 with col_d1:
     input_date = st.date_input("入力日", datetime.now(), key="input_date")
 with col_d2:
-    weekday_list = ["月","火","水","木","金","土","日"]
-    weekday = weekday_list[input_date.weekday()]
+    weekday = ["月","火","水","木","金","土","日"][input_date.weekday()]
     st.markdown("曜日")
     st.markdown(f'<div class="result-box">{weekday}</div>', unsafe_allow_html=True)
 
-# エリア・工場名の連動
+# エリア・工場の連動
 area_options = {
     "盛岡": ["滝沢", "都南", "南", "矢巾"],
     "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]
@@ -109,12 +52,11 @@ col_a1, col_a2 = st.columns(2)
 with col_a1:
     sel_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
 with col_a2:
-    # エリア選択に応じて工場リストを切り替え
     sel_factory = st.selectbox("工場名", area_options[sel_area], key="factory_select")
 
 st.divider()
 
-# 生産数の入力（3列配置）
+# 生産数入力
 c1, c2, c3 = st.columns(3)
 with c1:
     val_ritai = st.number_input("立体", min_value=0, key="立体")
@@ -124,55 +66,46 @@ with c2:
     val_yshirt = st.number_input("Yシャツ", min_value=0, key="Yシャツ")
 with c3:
     val_press = st.number_input("プレス", min_value=0, key="プレス")
-    # 合計の計算
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
     st.markdown("5項目合計")
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# 労働時間と生産点数
+# 労働時間と生産性
 col_l, col_r = st.columns(2)
 with col_l:
-    # 0.5時間刻みで選択
     val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(0, 21)], key="work_h")
 with col_r:
-    # 生産性の計算
     val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
     st.markdown("人時生産点数")
     st.markdown(f'<div class="result-box">{val_prod}</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# --- 6. 保存・キャンセルボタンの制御 ---
+# 保存ボタン
 if not st.session_state.get('confirm', False):
-    btn_save, btn_cancel = st.columns(2)
-    with btn_save:
+    b1, b2 = st.columns(2)
+    with b1:
         if st.button("保存する", use_container_width=True):
             if total_val > 0 and val_work_h > 0:
                 st.session_state.confirm = True
                 st.rerun()
             else:
-                st.error("入力が不足しています（合計または時間が0です）")
-    with btn_cancel:
+                st.error("入力が不足しています")
+    with b2:
         if st.button("キャンセル", use_container_width=True):
             reset_all_fields()
             st.rerun()
 
-# 保存前の確認画面
 if st.session_state.get('confirm', False):
-    st.warning("この内容でスプレッドシートに保存しますか？")
+    st.warning("この内容で保存してよろしいですか？")
     conf1, conf2 = st.columns(2)
     with conf1:
         if st.button("はい（確定）", use_container_width=True):
-            # スプレッドシートへ送る1行のデータ
-            new_row_data = [
-                str(input_date), weekday, sel_area, sel_factory,
-                val_ritai, val_heimen, val_zubon, val_yshirt, val_press, 
-                total_val, val_work_h, val_prod
-            ]
-            if save_to_sheets(new_row_data):
-                st.success("✅ 保存に成功しました！")
+            new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
+            if save_to_sheets(new_row):
+                st.success("✅ 保存完了！")
                 reset_all_fields()
                 st.rerun()
     with conf2:
