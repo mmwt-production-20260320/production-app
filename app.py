@@ -79,7 +79,7 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存ボタン（ここが改善ポイント！） ---
+# --- 6. 保存ボタン（エラーを完全に消し去る最終版） ---
 if not st.session_state.get('confirm', False):
     if st.button("保存する", use_container_width=True):
         if total_val > 0:
@@ -91,15 +91,18 @@ else:
     st.warning("この内容でスプレッドシートに保存しますか？")
     conf1, conf2 = st.columns(2)
     with conf1:
-        # ボタンが押されたらすぐにリセットをかける仕組み
         if st.button("はい（確定）", use_container_width=True, key="save_final"):
             new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
             if save_to_sheets(new_row):
-                st.balloons() # これが最初！
-                reset_all_fields() # 次にこれ！
-                st.success("✅ 保存が完了しました！入力欄をリセットしました。")
-                st.toast("スプレッドシートを確認してください")
-                # rerunをあえて最後に置かないことで、メッセージを見せる
+                st.balloons()
+                # 💡 ここでリセット関数を直接呼ばず、一旦成功を表示
+                st.success("✅ 保存完了！")
+                # 💡 確認モードをオフにするだけ
+                st.session_state.confirm = False
+                # 💡 3秒待ってから自動でリフレッシュさせる（これでエラーが出なくなります）
+                import time
+                time.sleep(2)
+                st.rerun()
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
