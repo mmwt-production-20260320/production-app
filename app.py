@@ -23,17 +23,15 @@ def save_to_sheets(data_list):
         st.error(f"保存エラー: {e}")
         return False
 
-# --- 4. リセット関数 ---
+# --- 4. リセット関数（中身をスッキリさせました） ---
 def reset_all_fields():
-    # 強制的に値を書き込むのではなく、session_stateから削除してリセットする
-    keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
-    for k in keys:
-        if k in st.session_state:
-            del st.session_state[k]
+    for key in ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]:
+        if key in st.session_state:
+            st.session_state[key] = 0.5 if key == "work_h" else 0
     st.session_state.confirm = False
 
 # --- 5. メイン画面の構成 ---
-st.title("生産管理入力システム")
+st.title("生産管理入力")
 
 # 日付と曜日
 col_d1, col_d2 = st.columns(2)
@@ -44,11 +42,8 @@ with col_d2:
     st.markdown("曜日")
     st.markdown(f'<div class="result-box">{weekday}</div>', unsafe_allow_html=True)
 
-# エリア・工場の連動
-area_options = {
-    "盛岡": ["滝沢", "都南", "南", "矢巾"],
-    "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]
-}
+# エリア・工場
+area_options = {"盛岡": ["滝沢", "都南", "南", "矢巾"], "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]}
 col_a1, col_a2 = st.columns(2)
 with col_a1:
     sel_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
@@ -73,10 +68,10 @@ with c3:
 
 st.divider()
 
-# 労働時間と生産性
+# 労働時間
 col_l, col_r = st.columns(2)
 with col_l:
-    val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(0, 21)], key="work_h")
+    val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(1, 21)], key="work_h")
 with col_r:
     val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
     st.markdown("人時生産点数")
@@ -84,44 +79,27 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存・キャンセルボタンの制御 ---
+# --- 6. 保存ボタン（ここが改善ポイント！） ---
 if not st.session_state.get('confirm', False):
-    b1, b2 = st.columns(2)
-    with b1:
-        if st.button("保存する", use_container_width=True):
-            if total_val > 0 and val_work_h > 0:
-                st.session_state.confirm = True
-                st.rerun()
-            else:
-                st.error("数値（点数と時間）を入力してください")
-    with b2:
-        if st.button("キャンセル", use_container_width=True):
-            reset_all_fields()
+    if st.button("保存する", use_container_width=True):
+        if total_val > 0:
+            st.session_state.confirm = True
             st.rerun()
-
-# 確定画面
-if st.session_state.get('confirm', False):
+        else:
+            st.error("数値を入力してください")
+else:
     st.warning("この内容でスプレッドシートに保存しますか？")
     conf1, conf2 = st.columns(2)
     with conf1:
-        # 【重要】ボタンの「キー」を固定して、2度押しを防ぎます
-        if st.button("はい（確定）", use_container_width=True, key="final_save_button"):
-            new_row = [
-                str(input_date), weekday, sel_area, sel_factory, 
-                val_ritai, val_heimen, val_zubon, val_yshirt, val_press, 
-                total_val, val_work_h, val_prod
-            ]
+        # ボタンが押されたらすぐにリセットをかける仕組み
+        if st.button("はい（確定）", use_container_width=True, key="save_final"):
+            new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
             if save_to_sheets(new_row):
-                # 1. まずはお祝い！
-                st.balloons()
-                st.success("✅ スプレッドシートへ保存しました！")
-                
-                # 2. データをリセット（これで2回目は送れなくなります）
-                reset_all_fields()
-                
-                # 3. 画面を真っさらに戻す
-                st.session_state.confirm = False
-                st.rerun()
+                st.balloons() # これが最初！
+                reset_all_fields() # 次にこれ！
+                st.success("✅ 保存が完了しました！入力欄をリセットしました。")
+                st.toast("スプレッドシートを確認してください")
+                # rerunをあえて最後に置かないことで、メッセージを見せる
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
