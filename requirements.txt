@@ -1,6 +1,2 @@
-streamlit
 gspread
-oauth2client
-pandas
-streamlit-gsheets
 google-auth
