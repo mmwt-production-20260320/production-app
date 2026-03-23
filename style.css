@@ -1,0 +1,43 @@
+/* style.css の中身 */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+html, body, [data-testid="stWidgetLabel"] p {
+    font-size: 15px !important;
+}
+
+h1 {
+    font-size: 22px !important;
+    text-align: center;
+    margin-bottom: 25px !important;
+    color: #ffffff;
+}
+
+.result-box {
+    background-color: #262730; 
+    color: #ffffff; 
+    border: 1px solid rgba(250, 250, 250, 0.2); 
+    border-radius: 0.5rem; 
+    height: 42px; 
+    display: flex; 
+    align-items: center; 
+    padding: 0px 12px; 
+    font-size: 16px; 
+    font-weight: bold; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.stNumberInput input, .stSelectbox div[data-baseweb="select"], .stDateInput input {
+    height: 42px !important;
+    min-height: 42px !important;
+}
+
+div[data-testid="column"] {
+    padding-bottom: 10px;
+}
+
+hr {
+    margin: 1.5rem 0 !important;
+}
