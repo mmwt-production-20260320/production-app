@@ -5,34 +5,45 @@ from datetime import datetime
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
 
-# --- 2. デザイン (CSS) ★ここを強化しました ---
+# --- 2. デザイン (CSS) ★ここをさらに強化しました ---
 st.markdown("""
     <style>
-    /* 右上のメニューやヘッダーを消してスッキリさせる */
-    /* #MainMenu {visibility: hidden;} */
+    /* 右下のStreamlitロゴやデプロイボタン、メニューを非表示にする */
+    #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-
-    /* 全体の文字サイズ */
+    .stDeployButton {display:none;}
+    
+    /* 全体の背景と文字サイズ */
     html, body, [data-testid="stWidgetLabel"] p {
-        font-size: 15px !important;
+        font-size: 14px !important;
+        font-weight: 500;
     }
     
     /* タイトルのデザイン */
     h1 {
-        font-size: 22px !important;
+        font-size: 24px !important;
         text-align: center;
-        margin-bottom: 25px !important;
+        padding: 10px 0px 20px 0px;
         color: #ffffff;
     }
 
-    /* 計算結果を表示する黒いボックス（枠線と余白を調整） */
+    /* 入力欄と計算結果ボックスの高さを42pxで完全統一 */
+    .stNumberInput input, 
+    .stSelectbox div[data-baseweb="select"], 
+    .stDateInput input,
+    .result-box {
+        height: 42px !important;
+        min-height: 42px !important;
+        line-height: 42px !important;
+    }
+
+    /* 計算結果を表示するボックス（数値の垂直中央揃えを強化） */
     .result-box {
         background-color: #262730; 
         color: #ffffff; 
         border: 1px solid rgba(250, 250, 250, 0.2); 
         border-radius: 0.5rem; 
-        height: 42px; 
         display: flex; 
         align-items: center; 
         padding: 0px 12px; 
@@ -42,20 +53,20 @@ st.markdown("""
         box-sizing: border-box;
     }
 
-    /* 入力欄の縦の高さを42pxで統一 */
-    .stNumberInput input, .stSelectbox div[data-baseweb="select"], .stDateInput input {
-        height: 42px !important;
-        min-height: 42px !important;
+    /* ラベルと入力欄の間の余白を詰める */
+    div[data-testid="stWidgetLabel"] {
+        margin-bottom: -10px !important;
     }
 
     /* カラム間の余白調整 */
     div[data-testid="column"] {
-        padding-bottom: 10px;
+        padding: 0px 5px;
     }
 
-    /* 区切り線の余白 */
+    /* 区切り線の色と余白 */
     hr {
-        margin: 1.5rem 0 !important;
+        margin: 1.0rem 0 !important;
+        border-top: 1px solid rgba(250, 250, 250, 0.1);
     }
     </style>
     """, unsafe_allow_html=True)
@@ -84,9 +95,10 @@ def reset_all_fields():
 # --- 5. メイン画面の構成 ---
 st.title("生産管理入力システム")
 
-# 日付と曜日（今日の日付を自動セット）
+# 日付と曜日（開いた日の日付を自動セット）
 col_d1, col_d2 = st.columns(2)
 with col_d1:
+    # datetime.now() で実行時の日付を取得
     input_date = st.date_input("入力日", datetime.now(), key="input_date")
 with col_d2:
     weekday_list = ["月","火","水","木","金","土","日"]
@@ -107,7 +119,7 @@ with col_a2:
 
 st.divider()
 
-# 生産数入力（3列できれいに配置）
+# 生産数入力（3列配置）
 c1, c2, c3 = st.columns(3)
 with c1:
     val_ritai = st.number_input("立体", min_value=0, key="立体")
@@ -126,7 +138,9 @@ st.divider()
 # 労働時間と生産点数
 col_l, col_r = st.columns(2)
 with col_l:
-    val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(0, 21)], key="work_h")
+    # デフォルトを0.0にするための設定
+    work_hours = [round(x*0.5, 1) for x in range(0, 21)]
+    val_work_h = st.selectbox("総労働時間 (h)", work_hours, key="work_h")
 with col_r:
     val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
     st.markdown("人時生産点数")
@@ -138,7 +152,7 @@ st.divider()
 if not st.session_state.get('confirm', False):
     btn_save, btn_cancel = st.columns(2)
     with btn_save:
-        if st.button("保存する", use_container_width=True):
+        if st.button("保存する", use_container_width=True, type="primary"):
             if total_val > 0 and val_work_h > 0:
                 st.session_state.confirm = True
                 st.rerun()
@@ -154,7 +168,7 @@ if st.session_state.get('confirm', False):
     st.warning("この内容で保存してよろしいですか？")
     conf1, conf2 = st.columns(2)
     with conf1:
-        if st.button("はい（確定）", use_container_width=True):
+        if st.button("はい（確定）", use_container_width=True, type="primary"):
             new_row = [
                 str(input_date), weekday, sel_area, sel_factory,
                 val_ritai, val_heimen, val_zubon, val_yshirt, val_press, 
