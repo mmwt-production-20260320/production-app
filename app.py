@@ -85,8 +85,6 @@ with col_r:
 st.divider()
 
 # --- 6. 保存・キャンセルボタンの制御 ---
-# 初回起動時にエラーが出ないよう、値をチェックしてから動かします
-
 if not st.session_state.get('confirm', False):
     b1, b2 = st.columns(2)
     with b1:
@@ -95,26 +93,36 @@ if not st.session_state.get('confirm', False):
                 st.session_state.confirm = True
                 st.rerun()
             else:
-                st.error("入力が不足しています")
+                st.error("数値（点数と時間）を入力してください")
     with b2:
         if st.button("キャンセル", use_container_width=True):
-            # ここでリセットを呼ぶのはOK（ボタンを押した時だけ動くから）
             reset_all_fields()
             st.rerun()
 
+# 確定画面
 if st.session_state.get('confirm', False):
-    st.warning("この内容で保存してよろしいですか？")
+    st.warning("この内容でスプレッドシートに保存しますか？")
     conf1, conf2 = st.columns(2)
     with conf1:
-        if st.button("はい（確定）", use_container_width=True):
-            new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
+        # 【重要】ボタンの「キー」を固定して、2度押しを防ぎます
+        if st.button("はい（確定）", use_container_width=True, key="final_save_button"):
+            new_row = [
+                str(input_date), weekday, sel_area, sel_factory, 
+                val_ritai, val_heimen, val_zubon, val_yshirt, val_press, 
+                total_val, val_work_h, val_prod
+            ]
             if save_to_sheets(new_row):
-                st.success("✅ 保存完了！")
-                # 保存成功時だけリセットする
+                # 1. まずはお祝い！
+                st.balloons()
+                st.success("✅ スプレッドシートへ保存しました！")
+                
+                # 2. データをリセット（これで2回目は送れなくなります）
                 reset_all_fields()
+                
+                # 3. 画面を真っさらに戻す
+                st.session_state.confirm = False
                 st.rerun()
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
-            st.rerun()
             st.rerun()
