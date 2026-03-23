@@ -29,7 +29,7 @@ def reset_all_fields():
                 for key in ["立体", "平面", "ズボン", "Yシャツ", "プレス", "work_h"]:
                     if key in st.session_state:
                         st.session_state[key] = 0 # 削除ではなく0を直接代入
-    st.session_state.confirm = False
+                st.session_state.confirm = False
 
 # --- 5. メイン画面の構成 ---
 st.title("生産管理入力")
