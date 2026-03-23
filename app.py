@@ -80,7 +80,7 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存ボタン（入力値を完全に空にする最終版） ---
+# --- 6. 保存ボタン（入力欄を確実に0にする決定版） ---
 if not st.session_state.get('confirm', False):
     if st.button("保存する", use_container_width=True):
         if total_val > 0:
@@ -95,22 +95,24 @@ else:
         if st.button("はい（確定）", use_container_width=True, key="save_final"):
             new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
             if save_to_sheets(new_row):
-                # 【重要】保存成功直後に、裏側のデータをすべて削除します
-                for key in ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]:
-                    if key in st.session_state:
-                        # セッションから削除することで、初期値に戻るよう強制します
-                        del st.session_state[key]
+                # 1. データを0にリセットする（ここで確実に書き込む）
+                for key in ["立体", "平面", "ズボン", "Yシャツ", "プレス", "work_h"]:
+                    st.session_state[key] = 0.5 if key == "work_h" else 0
                 
-                st.balloons()
-                st.success("✅ 保存完了！入力欄をリセットしました。")
+                # 2. 確認フラグを下ろす
                 st.session_state.confirm = False
                 
-                # 2秒待ってから画面を新しくして、真っさらな状態で表示
+                # 3. お祝い！
+                st.balloons()
+                st.success("✅ 保存完了！入力欄をリセットしました。")
+                
+                # 4. 【重要】0.5秒だけ待ってから、画面を強制的に「描き直し」させる
                 import time
-                time.sleep(2)
+                time.sleep(0.5)
                 st.rerun()
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
+            st.rerun()
             st.rerun()
             st.rerun()
