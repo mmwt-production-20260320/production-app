@@ -9,7 +9,7 @@ st.set_page_config(page_title="生産管理入力", layout="centered", page_icon
 st.markdown("""
     <style>
     /* 右上のメニューやヘッダーを消してスッキリさせる */
-    #MainMenu {visibility: hidden;}
+    /* #MainMenu {visibility: hidden;} */
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
