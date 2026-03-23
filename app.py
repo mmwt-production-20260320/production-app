@@ -8,6 +8,15 @@ st.set_page_config(page_title="生産管理入力", layout="centered", page_icon
 # --- 2. デザイン (CSS) ★ここをさらに強化しました ---
 st.markdown("""
     <style>
+    /* 右下のツールバーとフィードバック用アイコンを完全に消去 */
+    [data-testid="stStatusWidget"] {display: none;}
+    footer {visibility: hidden;}
+    .stDeployButton {display:none;}
+    #MainMenu {visibility: hidden;}
+
+    /* 追加：もしそれでも消えない場合の強制指定 */
+    div[data-testid="stToolbar"] {display: none !important;}
+    button[title="View source"], button[title="Report a bug"] {display: none;}
     /* 右下のStreamlitロゴやデプロイボタン、メニューを非表示にする */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
