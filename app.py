@@ -25,10 +25,11 @@ def save_to_sheets(data_list):
 
 # --- 4. リセット関数 ---
 def reset_all_fields():
+    # 強制的に値を書き込むのではなく、session_stateから削除してリセットする
     keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
     for k in keys:
         if k in st.session_state:
-            st.session_state[k] = 0.0 if k == "work_h" else 0
+            del st.session_state[k]
     st.session_state.confirm = False
 
 # --- 5. メイン画面の構成 ---
