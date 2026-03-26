@@ -64,11 +64,15 @@ with c3:
 
 st.divider()
 
-# 労働時間
+# 労働時間 (selectbox から number_input に変更)
 col_l, col_r = st.columns(2)
 with col_l:
-    val_work_h = st.selectbox("総労働時間 (h)", [round(x*0.5, 1) for x in range(1, 21)], key="work_h")
+    # 直接入力タイプに変更。初期値を0.5、最小値を0.1にします。
+    # format="%.1f" とすることで、小数点第1位まで表示・入力しやすくします。
+    val_work_h = st.number_input("総労働時間 (h)", min_value=0.1, value=0.5, step=0.1, format="%.1f", key="work_h")
+
 with col_r:
+    # 入力された数値を使って計算
     val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
     st.markdown("人時生産点数")
     st.markdown(f'<div class="result-box">{val_prod}</div>', unsafe_allow_html=True)
