@@ -29,3 +29,34 @@ h1 {
     padding: 0 10px !important;
     margin-bottom: 1rem !important;
 }
+
+/* 計算結果・表示用ボックスのスタイル */
+.result-box {
+    /* 横幅を親要素（カラム）に100%合わせる */
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    /* 高さ・枠線を標準ウィジェットに統一 */
+    height: 42px !important; /* 標準のnumber_inputに近い高さ */
+    border: 1px solid #464855 !important;
+    border-radius: 0.5rem !important;
+    background-color: #262730 !important;
+    
+    /* 文字の見た目 */
+    color: white !important;
+    font-size: 1rem !important;
+    
+    /* 箱のサイズ計算を内側基準にする（ズレ防止） */
+    box-sizing: border-box !important;
+    
+    /* 下の余白を標準ウィジェットと合わせる */
+    margin-top: 0px !important;
+    margin-bottom: 1rem !important;
+}
+
+/* ラベル（曜日、5項目合計などの文字）の上の余白を調整 */
+.stMarkdown p {
+    margin-bottom: 4px !important;
+}
