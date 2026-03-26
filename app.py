@@ -64,19 +64,24 @@ with c3:
 
 st.divider()
 
-# 労働時間 (初期値を0にする)
+# 労働時間 (小数点第2位まで表示・入力)
 col_l, col_r = st.columns(2)
 with col_l:
-    # value=0 にすることで、最初から「0」が表示されます。
-    # step=0.1 は残しておくと、＋ーボタンで微調整できて便利です。
-    val_work_h = st.number_input("総労働時間 (h)", min_value=0.00, value=0.00, step=0.25, format="%.1f", key="work_h")
+    # format="%.2f" に変更し、stepを0.01にすることで、細かい調整が可能になります
+    val_work_h = st.number_input(
+        "総労働時間 (h)", 
+        min_value=0.0, 
+        value=st.session_state.get("work_h", 0.0), 
+        step=0.01, 
+        format="%.2f", 
+        key="work_h"
+    )
 
 with col_r:
-    # 労働時間が0の時に割り算エラーが出ないようにガードしています
-    val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0.0
+    # 計算結果も小数点第2位で表示
+    val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0.00
     st.markdown("人時生産点数")
-    st.markdown(f'<div class="result-box">{val_prod}</div>', unsafe_allow_html=True)
-
+    st.markdown(f'<div class="result-box">{val_prod:.2f}</div>', unsafe_allow_html=True)
 st.divider()
 
 # --- 5. 保存・確認ボタンのロジック ---
