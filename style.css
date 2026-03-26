@@ -17,27 +17,35 @@ h1 {
     color: #FAFAFA !important;
 }
 
-/* 入力ボックスと計算結果ボックスの高さを統一する */
+/* --- style.css の修正・追記案 --- */
+
+/* 1. 全ての入力ボックスと結果ボックスの縁取りを統一 */
 div[data-baseweb="input"], 
-div[data-baseweb="select"], 
+div[data-baseweb="select"] > div, 
+.result-box {
+    border: 1px solid rgba(250, 250, 250, 0.2) !important; /* 薄いグレーの縁取り */
+    border-radius: 8px !important;
+    background-color: #262730 !important;
+    transition: border-color 0.2s; /* ふわっと変わるアニメーション */
+}
+
+/* 2. 結果ボックス（曜日・合計など）の微調整 */
 .result-box {
     min-height: 45px !important;
     height: 45px !important;
+    padding-left: 15px;
     display: flex;
-    align-items: center; /* 文字を上下の真ん中に */
+    align-items: center;
+    color: #FFFFFF !important; /* 文字色を白に統一 */
+    font-size: 1rem !important;
+    font-weight: normal !important;
+    box-sizing: border-box; /* 枠線を含めたサイズ計算にする */
 }
 
-/* 「5項目合計」などの計算結果ボックス専用のデザイン */
-.result-box {
-    background-color: #262730;
-    border: 1px solid #464855;
-    border-radius: 8px;
-    padding-left: 15px; /* 左側に少し余白 */
-    
-   /* 文字色とサイズを他の入力項目と統一 */
-    font-weight: normal; 
-    font-size: 1rem !important; 
-    color: #FFFFFF !important; /* 緑色(#00FFC8)から白に変更 */
+/* 3. (オプション) マウスを乗せた時に縁取りを少し明るくする（統一感アップ） */
+div[data-baseweb="input"]:hover,
+.result-box:hover {
+    border-color: rgba(250, 250, 250, 0.4) !important;
 }
 
 /* ボタンのデザイン */
