@@ -1,3 +1,9 @@
+/* 1. タイトルのサイズ調整 (一回り小さく) */
+h1 {
+    font-size: 1.8rem !important; /* 標準より少し小さく設定 */
+    padding-bottom: 10px;
+}
+
 /* 全体の文字色と背景 */
 .stApp {
     background-color: #0E1117;
@@ -27,9 +33,11 @@ div[data-baseweb="select"],
     border: 1px solid #464855;
     border-radius: 8px;
     padding-left: 15px; /* 左側に少し余白 */
-    font-weight: bold;
-    font-size: 18px;
-    color: #00FFC8; /* 合計値などは少し目立つ色に */
+    
+   /* 文字色とサイズを他の入力項目と統一 */
+    font-weight: normal; 
+    font-size: 1rem !important; 
+    color: #FFFFFF !important; /* 緑色(#00FFC8)から白に変更 */
 }
 
 /* ボタンのデザイン */
