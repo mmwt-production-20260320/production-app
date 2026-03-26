@@ -69,7 +69,7 @@ col_l, col_r = st.columns(2)
 with col_l:
     # value=0 にすることで、最初から「0」が表示されます。
     # step=0.1 は残しておくと、＋ーボタンで微調整できて便利です。
-    val_work_h = st.number_input("総労働時間 (h)", min_value=0.0, value=0.0, step=0.25, format="%.1f", key="work_h")
+    val_work_h = st.number_input("総労働時間 (h)", min_value=0.00, value=0.00, step=0.25, format="%.1f", key="work_h")
 
 with col_r:
     # 労働時間が0の時に割り算エラーが出ないようにガードしています
