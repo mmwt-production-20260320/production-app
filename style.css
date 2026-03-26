@@ -1,6 +1,6 @@
 /* 1. タイトルのサイズ調整 (一回り小さく) */
 h1 {
-    font-size: 1.8rem !important; /* 標準より少し小さく設定 */
+    font-size: 1.5rem !important; /* 標準より少し小さく設定 */
     padding-bottom: 10px;
 }
 
