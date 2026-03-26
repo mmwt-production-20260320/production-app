@@ -115,17 +115,15 @@ else:
                 st.success("✅ 保存完了！")
                 st.balloons()
                 
-                # --- ここがエラー回避のポイント ---
-                # 直接 0 を代入せず、一度セッションを空にしてから
-                # ページを完全に再読み込み(リフレッシュ)させます
-                for key in ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h", "confirm"]:
+                # --- 強力リセット開始 ---
+                # 1. すべての入力キーをリスト化
+                reset_keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h", "confirm"]
+                
+                # 2. セッションから完全に削除（これで「記憶」を消します）
+                for key in reset_keys:
                     if key in st.session_state:
                         del st.session_state[key]
                 
-                time.sleep(1)
+                # 3. 重要：待ち時間を入れずに「即」rerunする
+                # time.sleep(1) を入れると、消す前の値が画面に残ってしまうことがあります
                 st.rerun()
-
-    with conf2:
-        if st.button("いいえ（戻る）", use_container_width=True):
-            st.session_state.confirm = False
-            st.rerun()
