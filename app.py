@@ -45,7 +45,7 @@ with col_d2:
     st.markdown(f'<div class="result-box">{weekday}</div>', unsafe_allow_html=True)
 
 # エリア・工場
-area_options = {"盛岡": ["滝沢", "都南", "南", "矢巾"], "花巻": ["桜木", "藤沢", "北上", "水沢", "一関"]}
+area_options = {"盛岡": ["滝沢", "都南", "南", "矢巾"], "花巻": ["桜木", "藤沢", "北上", "江釣子", "水沢", "一関"]}
 col_a1, col_a2 = st.columns(2)
 with col_a1:
     sel_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
