@@ -1,6 +1,7 @@
 import streamlit as st
 import gspread
 from datetime import datetime
+import time  # 👈 これを一番上に追加してください！
 
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
@@ -80,26 +81,22 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存ボタン部分の修正 ---
+# --- 6. 保存ボタン部分（確定処理） ---
 with conf1:
     if st.button("はい（確定）", use_container_width=True, key="save_final"):
         new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
         
         if save_to_sheets(new_row):
-            # --- 【ここから重要：リセット処理】 ---
-            # 1. 入力項目に関連するセッション状態をすべて0や初期値に戻す
+            # セッション状態をリセット
             reset_keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
             for key in reset_keys:
-                st.session_state[key] = 0  # 削除(del)ではなく、直接0を代入するのが確実です
+                st.session_state[key] = 0
             
-            # 2. 確認フラグを降ろす
             st.session_state.confirm = False
             
-            # 3. 完了メッセージを出して、即座に画面をリフレッシュ
             st.success("✅ 保存完了！データをリセットしました。")
             st.balloons()
             
-            # 💡 少し待たずに、すぐ rerun することで「二重押し」を防ぎます
-            import time
-            time.sleep(1) # ユーザーが成功を確認する一瞬の猶予
+            # 1秒だけ待ってからリフレッシュ（これでNameErrorが消えます）
+            time.sleep(1) 
             st.rerun()
