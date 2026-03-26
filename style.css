@@ -4,3 +4,28 @@ h1 {
     padding-bottom: 5px;
 }
 
+
+/* 曜日と合計・生産点数のボックス共通設定 */
+.result-box {
+    /* 枠線の設定（他の入力欄に近い色と太さに調整） */
+    border: 1px solid #464855 !important;
+    border-radius: 0.5rem !important;
+    background-color: #262730 !important;
+    
+    /* 高さの設定 */
+    height: 45px !important;
+    
+    /* 文字を真ん中に寄せる設定 */
+    display: flex !important;
+    align-items: center !important;   /* 上下の真ん中 */
+    justify-content: center !important; /* 左右の真ん中（左寄せがいい場合は flex-start） */
+    
+    /* 文字の見た目 */
+    color: white !important;
+    font-size: 1rem !important;
+    font-weight: 500 !important;
+    
+    /* 余白 */
+    padding: 0 10px !important;
+    margin-bottom: 1rem !important;
+}
