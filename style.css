@@ -1,57 +1,43 @@
-/* 1. タイトルのサイズ調整 (一回り小さく) */
+/* 1. タイトルのサイズ */
 h1 {
-    font-size: 1.5rem !important; /* 標準より少し小さく設定 */
-    padding-bottom: 10px;
+    font-size: 1.6rem !important;
+    padding-bottom: 5px;
 }
 
-/* 全体の文字色と背景 */
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
-}
-
-/* ラベル（項目名）の文字を少し小さくして整える */
-.stMarkdown p {
-    font-size: 14px !important;
-    margin-bottom: 5px !important;
-    color: #FAFAFA !important;
-}
-
-/* --- style.css の修正・追記案 --- */
-
-/* 1. 全ての入力ボックスと結果ボックスの縁取りを統一 */
+/* 2. 入力ボックスと自作ボックスの共通設定 */
+/* st.number_input, st.selectbox, 自作BOXをターゲットにします */
 div[data-baseweb="input"], 
 div[data-baseweb="select"] > div, 
 .result-box {
-    border: 1px solid rgba(250, 250, 250, 0.2) !important; /* 薄いグレーの縁取り */
-    border-radius: 8px !important;
     background-color: #262730 !important;
-    transition: border-color 0.2s; /* ふわっと変わるアニメーション */
+    border: 1px solid rgba(250, 250, 250, 0.2) !important;
+    border-radius: 8px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    color: #FFFFFF !important;
+    box-sizing: border-box !important;
 }
 
-/* 2. 結果ボックス（曜日・合計など）の微調整 */
+/* 3. 自作BOX（合計値・曜日・生産点数）の中身の配置 */
 .result-box {
-    min-height: 45px !important;
-    height: 45px !important;
-    padding-left: 15px;
     display: flex;
     align-items: center;
-    color: #FFFFFF !important; /* 文字色を白に統一 */
-    font-size: 1rem !important;
-    font-weight: normal !important;
-    box-sizing: border-box; /* 枠線を含めたサイズ計算にする */
+    padding-left: 14px;
+    font-size: 1rem;
+    font-weight: normal;
 }
 
-/* 3. (オプション) マウスを乗せた時に縁取りを少し明るくする（統一感アップ） */
-div[data-baseweb="input"]:hover,
-.result-box:hover {
-    border-color: rgba(250, 250, 250, 0.4) !important;
+/* 4. 【重要】number_input内の「＋」「ー」ボタン周辺の調整 */
+/* ボタンの境界線を消して、メインの枠線と一体化させます */
+div[data-testid="stNumberInputStepDown"], 
+div[data-testid="stNumberInputStepUp"] {
+    border: none !important;
+    background-color: transparent !important;
+    height: 40px !important; /* 親要素より少し小さくして収める */
 }
 
-/* ボタンのデザイン */
-.stButton button {
-    background-color: #262730 !important;
-    border: 1px solid #464855 !important;
-    height: 50px !important;
-    font-weight: bold !important;
+/* 5. number_inputの入力エリア自体の高さを調整 */
+div[data-baseweb="input"] input {
+    height: 42px !important;
+    padding: 0 10px !important;
 }
