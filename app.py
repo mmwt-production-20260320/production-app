@@ -64,16 +64,16 @@ with c3:
 
 st.divider()
 
-# 労働時間 (selectbox から number_input に変更)
+# 労働時間 (初期値を0にする)
 col_l, col_r = st.columns(2)
 with col_l:
-    # 直接入力タイプに変更。初期値を0.5、最小値を0.1にします。
-    # format="%.1f" とすることで、小数点第1位まで表示・入力しやすくします。
-    val_work_h = st.number_input("総労働時間 (h)", min_value=0.1, value=0.5, step=0.1, format="%.1f", key="work_h")
+    # value=0 にすることで、最初から「0」が表示されます。
+    # step=0.1 は残しておくと、＋ーボタンで微調整できて便利です。
+    val_work_h = st.number_input("総労働時間 (h)", min_value=0.0, value=0.0, step=0.25, format="%.1f", key="work_h")
 
 with col_r:
-    # 入力された数値を使って計算
-    val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0
+    # 労働時間が0の時に割り算エラーが出ないようにガードしています
+    val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0.0
     st.markdown("人時生産点数")
     st.markdown(f'<div class="result-box">{val_prod}</div>', unsafe_allow_html=True)
 
@@ -106,12 +106,12 @@ else:
                 st.success("✅ 保存完了！")
                 st.balloons()
                 
-                # --- 【ここが最大の変更点】 ---
-                # 複雑なことはせず、一度全ての記憶を消去します
-                for key in list(st.session_state.keys()):
-                    del st.session_state[key]
+                # 全てのセッション状態を 0 にリセット
+                for key in ["立体", "平面", "ズボン", "Yシャツ", "プレス", "work_h"]:
+                    st.session_state[key] = 0.0 # 👈 ここも 0.0 に！
                 
-                # 1.5秒だけ風船を見せてから、ページを完全にリフレッシュ
+                st.session_state.confirm = False
+                
                 time.sleep(1.5)
                 st.rerun()
 
