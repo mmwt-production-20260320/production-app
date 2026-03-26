@@ -85,46 +85,47 @@ st.divider()
 
 # --- 6. 保存・確認ボタンのロジック ---
 
+# セッション状態の初期化
+if "confirm" not in st.session_state:
+    st.session_state.confirm = False
+
 # まだ「保存ボタン」を押していない時
-if not st.session_state.get('confirm', False):
+if not st.session_state.confirm:
     if st.button("保存する", use_container_width=True):
         if total_val > 0:
-            st.session_state.confirm = True # 確認モードをONにする
-            st.rerun() # 画面を書き換えて確認画面へ
+            st.session_state.confirm = True
+            st.rerun()
         else:
             st.error("数値を入力してください")
 
 # 「保存ボタン」が押されて、確認モードになっている時
 else:
     st.warning("⚠️ この内容でスプレッドシートに保存しますか？")
-    
-    # ここで初めて conf1, conf2 (2つの列) を作成します
     conf1, conf2 = st.columns(2)
     
     with conf1:
+        # 【重要】ボタン自体にリセット機能を持たせることはできないので
+        # 保存成功後にページを「完全リフレッシュ」する方法に切り替えます
         if st.button("はい（確定）", use_container_width=True, key="save_final"):
             new_row = [str(input_date), weekday, sel_area, sel_factory, 
                        val_ritai, val_heimen, val_zubon, val_yshirt, 
                        val_press, total_val, val_work_h, val_prod]
             
             if save_to_sheets(new_row):
-                # 数値を0に戻すリセット処理
-                reset_keys = ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h"]
-                for key in reset_keys:
-                    st.session_state[key] = 0
-                
-                # 確認モードをOFFに戻す
-                st.session_state.confirm = False
-                
-                st.success("✅ 保存完了！データをリセットしました。")
+                st.success("✅ 保存完了！")
                 st.balloons()
                 
-                import time
-                time.sleep(1) 
-                st.rerun() # 真っさらな状態に戻る
+                # --- ここがエラー回避のポイント ---
+                # 直接 0 を代入せず、一度セッションを空にしてから
+                # ページを完全に再読み込み(リフレッシュ)させます
+                for key in ["立体", "ズボン", "プレス", "平面", "Yシャツ", "work_h", "confirm"]:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                
+                time.sleep(1)
+                st.rerun()
 
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
-            # 確認モードを取り消して、入力画面に戻る
             st.session_state.confirm = False
             st.rerun()
