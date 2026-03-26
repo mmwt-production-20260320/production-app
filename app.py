@@ -35,11 +35,12 @@ with col_d1:
     input_date = st.date_input("入力日", datetime.now(), key="input_date")
 with col_d2:
     weekday = ["月","火","水","木","金","土","日"][input_date.weekday()]
-    st.markdown("曜日")
+   # 例：曜日の表示
+    st.write("曜日") # ラベルとして表示
     st.markdown(f'<div class="result-box">{weekday}</div>', unsafe_allow_html=True)
 
 # エリア・工場
-area_options = {"盛岡": ["滝沢", "都南", "南", "矢巾"], "花巻": ["桜木", "藤沢", "北上", "江釣子", "水沢", "一関"]}
+area_options = {"盛岡": ["矢巾", "滝沢", "都南", "南"], "花巻": ["桜木", "藤沢", "北上", "江釣子", "水沢", "一関"]}
 col_a1, col_a2 = st.columns(2)
 with col_a1:
     sel_area = st.selectbox("エリア", list(area_options.keys()), key="area_select")
@@ -59,7 +60,8 @@ with c2:
 with c3:
     val_press = st.number_input("プレス", min_value=0, key="プレス")
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
-    st.markdown("5項目合計")
+    # 例：5項目合計の表示
+    st.write("5項目合計")
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
 
 st.divider()
