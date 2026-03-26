@@ -64,24 +64,27 @@ with c3:
 
 st.divider()
 
-# 労働時間 (小数点第2位まで表示・入力)
+# 労働時間 (0.25刻み、小数点第2位表示)
 col_l, col_r = st.columns(2)
 with col_l:
-    # format="%.2f" に変更し、stepを0.01にすることで、細かい調整が可能になります
+    # step=0.25 にすることで、＋ーボタンで 0.25, 0.50, 0.75... と動きます
     val_work_h = st.number_input(
         "総労働時間 (h)", 
         min_value=0.0, 
-        value=st.session_state.get("work_h", 0.0), 
-        step=0.01, 
+        value=0.0, # 初期値を0にします
+        step=0.25, 
         format="%.2f", 
         key="work_h"
     )
 
 with col_r:
-    # 計算結果も小数点第2位で表示
+    # 計算結果も小数点第2位まで表示
     val_prod = round(total_val / val_work_h, 2) if val_work_h > 0 else 0.00
     st.markdown("人時生産点数")
+    # 表示を 0.00 形式に固定するため :.2f を使います
     st.markdown(f'<div class="result-box">{val_prod:.2f}</div>', unsafe_allow_html=True)
+
+
 st.divider()
 
 # --- 5. 保存・確認ボタンのロジック ---
