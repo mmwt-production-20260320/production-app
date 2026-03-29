@@ -170,7 +170,7 @@ try:
 
         # グラフ表示
         if not df_sum.empty and df_sum.sum() > 0:
-            st.subheader(f"{sel_graph_factory}工場：{sel_month} の累計")
+            st.markdown(f'<div class="sub-title">{sel_graph_factory}工場：{sel_month}</div>', unsafe_allow_html=True)
             st.bar_chart(df_sum)
             st.info(f"💡 {sel_month} の総生産点数： {int(df_sum.sum())} 点")
         else:
