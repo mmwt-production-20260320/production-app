@@ -106,46 +106,68 @@ else:
             st.session_state.confirm = False
             st.rerun()
 
-# --- 7. 分析・グラフ表示 (月別累計対応) ---
+# --- 7. 分析・グラフ表示 (エラー対策強化版) ---
 st.divider()
 st.header("📊 工場別・月別累計分析")
+
 try:
+    # データの読み込み
     creds_dict = st.secrets["gcp_service_account"]
     client = gspread.service_account_from_dict(creds_dict)
     sheet = client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').sheet1
-    df = pd.DataFrame(sheet.get_all_records())
+    
+    # 全データを取得
+    data = sheet.get_all_records()
+    
+    if data:
+        df = pd.DataFrame(data)
 
-    if not df.empty:
-        # 日付を日付型に変換し、新しい列「年月」を作成
-        df["入力日"] = pd.to_datetime(df["入力日"])
-        df["年月"] = df["入力日"].dt.strftime('%Y-%m') # 2026-03 のような形式
+        # 【重要】日付変換のエラー対策
+        # errors='coerce' をつけることで、変な形式があっても止まらずに処理します
+        df["入力日"] = pd.to_datetime(df["入力日"], errors='coerce')
+        
+        # 日付として読み込めなかった行（NaT）を削除
+        df = df.dropna(subset=["入力日"])
+        
+        # 年月列の作成
+        df["年月"] = df["入力日"].dt.strftime('%Y-%m')
 
+        # 工場と月の選択
+        target_factories = df["工場名"].unique()
         col_g1, col_g2 = st.columns(2)
+        
         with col_g1:
-            target_factories = df["工場名"].unique()
             sel_graph_factory = st.selectbox("工場を選択", target_factories, key="sel_f")
+        
         with col_g2:
-            # その工場にデータがある「月」だけを選択肢に出す
-            target_months = df[df["工場名"] == sel_graph_factory]["年月"].unique()
-            target_months = sorted(target_months, reverse=True) # 新しい月を上に
+            # 選択された工場のデータから月を抽出
+            factory_df = df[df["工場名"] == sel_graph_factory]
+            target_months = sorted(factory_df["年月"].unique(), reverse=True)
             sel_month = st.selectbox("月を選択", target_months, key="sel_m")
 
-        # 選択された「工場」かつ「月」でデータを絞り込み
-        df_filtered = df[(df["工場名"] == sel_graph_factory) & (df["年月"] == sel_month)].copy()
-        
+        # データの絞り込みと集計
+        df_filtered = factory_df[factory_df["年月"] == sel_month].copy()
         categories = ["立体", "平面", "ズボン", "Yシャツ", "プレス"]
+        
+        # 数値型に強制変換（文字列として入っている場合の対策）
+        for cat in categories:
+            df_filtered[cat] = pd.to_numeric(df_filtered[cat], errors='coerce').fillna(0)
+            
         df_sum = df_filtered[categories].sum()
-        
-        st.subheader(f"{sel_graph_factory}工場：{sel_month} の累計")
-        st.bar_chart(df_sum)
-        
-        # 月間合計値のサマリー
-        monthly_total = df_sum.sum()
-        st.info(f"💡 {sel_month} の総生産点数： {monthly_total} 点")
 
+        # グラフ表示
+        if not df_sum.empty and df_sum.sum() > 0:
+            st.subheader(f"{sel_graph_factory}工場：{sel_month} の累計")
+            st.bar_chart(df_sum)
+            st.info(f"💡 {sel_month} の総生産点数： {int(df_sum.sum())} 点")
+        else:
+            st.warning("選択された条件のデータがありません。")
+            
     else:
-        st.info("データがありません")
+        st.info("スプレッドシートにデータがありません。")
+
 except Exception as e:
-    st.write("データを読み込み中...")
+    # どこで止まっているかデバッグ情報を表示
+    st.error(f"グラフ表示でエラーが発生しました。詳細: {e}")
 
 
