@@ -2,6 +2,8 @@ import streamlit as st
 import gspread
 from datetime import datetime
 import time
+import pandas as pd
+import altair as alt
 
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
@@ -13,8 +15,7 @@ try:
 except:
     pass
 
-# --- 3. セッション初期化（リセット用） ---
-# 保存後に箱の名前を変えて強制リセットするためのID
+# --- 3. セッション初期化 ---
 if "form_id" not in st.session_state:
     st.session_state.form_id = 0
 if "confirm" not in st.session_state:
@@ -33,7 +34,7 @@ def save_to_sheets(data_list):
         st.error(f"保存エラー: {e}")
         return False
 
-# --- 5. メイン画面の構成 ---
+# --- 5. メイン画面 ---
 st.title("生産管理入力")
 
 # 日付と曜日
@@ -55,29 +56,22 @@ with col_a2:
 
 st.divider()
 
-# --- 生産数入力 (スマホでの「index表示」を防ぐため、1列ずつ定義) ---
-# カラムを分けずに書くことで、スマホでは1列に、PCでも綺麗に並びます。
-# もしPCで横並びにしたい場合は st.columns([1, 1]) 程度に抑えるのが無難です。
-# --- 生産数入力 (ボタンを消して、数字を全部見えるようにする) ---
+# 生産数入力（2列にして幅を確保＋ボタン撤去）
 col_p1, col_p2 = st.columns(2)
-
 with col_p1:
-    # step=None にすると「＋ー」が消えて、枠内が広くなります！
     val_ritai = st.number_input("立体", min_value=0, step=None, key=f"ritai_{st.session_state.form_id}")
     val_heimen = st.number_input("平面", min_value=0, step=None, key=f"heimen_{st.session_state.form_id}")
     val_zubon = st.number_input("ズボン", min_value=0, step=None, key=f"zubon_{st.session_state.form_id}")
-
 with col_p2:
     val_yshirt = st.number_input("Yシャツ", min_value=0, step=None, key=f"yshirt_{st.session_state.form_id}")
     val_press = st.number_input("プレス", min_value=0, step=None, key=f"press_{st.session_state.form_id}")
-    
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
     st.markdown('<p class="label-text">5項目合計</p>', unsafe_allow_html=True)
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
-    
+
 st.divider()
 
-# 労働時間と生産点数
+# 労働時間
 col_l, col_r = st.columns(2)
 with col_l:
     val_work_h = st.number_input("総労働時間 (h)", min_value=0.0, step=0.25, format="%.2f", key=f"work_{st.session_state.form_id}")
@@ -88,7 +82,7 @@ with col_r:
 
 st.divider()
 
-# --- 6. 保存ロジック ---
+# 保存ボタン
 if not st.session_state.confirm:
     if st.button("保存する", use_container_width=True):
         if total_val > 0:
@@ -101,64 +95,43 @@ else:
     conf1, conf2 = st.columns(2)
     with conf1:
         if st.button("はい（確定）", use_container_width=True):
-            new_row = [str(input_date), weekday, sel_area, sel_factory, 
-                       val_ritai, val_heimen, val_zubon, val_yshirt, 
-                       val_press, total_val, val_work_h, val_prod]
+            new_row = [str(input_date), weekday, sel_area, sel_factory, val_ritai, val_heimen, val_zubon, val_yshirt, val_press, total_val, val_work_h, val_prod]
             if save_to_sheets(new_row):
                 st.success("✅ 保存完了！")
-                st.balloons()
-                # フォームIDを更新して全入力欄を強制リセット（0に戻す）
                 st.session_state.form_id += 1
                 st.session_state.confirm = False
-                time.sleep(1.5)
+                time.sleep(1.2)
                 st.rerun()
     with conf2:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
             st.rerun()
 
-
-# --- 7. 分析・グラフ表示セクション ---
+# --- 7. 分析・グラフ表示 ---
 st.divider()
-st.header("📊 工場別・カテゴリ比較分析")
-
+st.header("📊 工場別・カテゴリ分析")
 try:
-    import pandas as pd
-    # スプレッドシートから最新データを読み込み
     creds_dict = st.secrets["gcp_service_account"]
     client = gspread.service_account_from_dict(creds_dict)
     sheet = client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').sheet1
-    
-    # データを表形式(DataFrame)にする
     df = pd.DataFrame(sheet.get_all_records())
 
     if not df.empty:
-        # 1. 工場選択
         target_factories = df["工場名"].unique()
-        sel_graph_factory = st.selectbox("分析する工場を選択してください", target_factories)
-
-        # 2. 選択された工場で絞り込み
+        sel_graph_factory = st.selectbox("工場を選択", target_factories)
         df_filtered = df[df["工場名"] == sel_graph_factory].copy()
-        
-        # 3. 5項目の合計累計を算出
         categories = ["立体", "平面", "ズボン", "Yシャツ", "プレス"]
-        # 各項目の合計値を計算
-        df_sum = df_filtered[categories].sum()
+        df_sum = df_filtered[categories].sum().reset_index()
+        df_sum.columns = ["項目", "累計"]
 
-        # 4. 棒グラフの表示
-        st.subheader(f"{sel_graph_factory}工場：項目別 合計累計")
-        
-        # Streamlitの st.bar_chart を使用
-        # df_sum は1行のデータなので、グラフ用に整形します
-        st.bar_chart(df_sum)
-
-        # 5. 数値データも表で表示（確認用）
-        st.write("項目別の累計数値")
-        st.dataframe(df_sum.T) # Tは縦横入れ替え
-
+        # ラベルを斜めにするAltairグラフ
+        chart = alt.Chart(df_sum).mark_bar().encode(
+            x=alt.X("項目:N", axis=alt.Axis(labelAngle=-45), title="項目"),
+            y=alt.Y("累計:Q", title="累計点数"),
+            color=alt.value("#4682b4")
+        ).properties(height=300)
+        st.altair_chart(chart, use_container_width=True)
     else:
-        st.info("データが蓄積されるとここにグラフが表示されます。")
-
+        st.info("データがありません")
 except Exception as e:
-    st.error(f"分析データの読み込み中にエラーが発生しました: {e}")
-
+    st.write("分析データを準備中...")
