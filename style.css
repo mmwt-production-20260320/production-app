@@ -1,4 +1,4 @@
-/* すべての計算結果・表示ボックスの統一デザイン */
+/* 計算結果・表示ボックスの統一デザイン */
 .result-box {
     width: 100% !important;
     box-sizing: border-box !important;
@@ -15,10 +15,9 @@
     margin-bottom: 1rem !important;
 }
 
-/* ラベル文字の調整 */
+/* 項目名（ラベル）のスタイル */
 .label-text {
     margin-bottom: 4px !important;
     font-size: 0.9rem !important;
     color: #FAFAFA !important;
-    font-weight: 400;
 }
