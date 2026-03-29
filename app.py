@@ -34,7 +34,8 @@ def save_to_sheets(data_list):
         return False
 
 # --- 5. メイン画面 ---
-st.title("生産管理入力")
+# タイトルに工場の絵文字を追加します
+st.title("🏭 生産管理入力")
 
 # 日付と曜日
 col_d1, col_d2 = st.columns(2)
