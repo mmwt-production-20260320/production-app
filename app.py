@@ -106,9 +106,9 @@ else:
             st.session_state.confirm = False
             st.rerun()
 
-# --- 7. 分析・グラフ表示 ---
+# --- 7. 分析・グラフ表示 (月別累計対応) ---
 st.divider()
-st.header("📊 工場別・カテゴリ分析")
+st.header("📊 工場別・月別累計分析")
 try:
     creds_dict = st.secrets["gcp_service_account"]
     client = gspread.service_account_from_dict(creds_dict)
@@ -116,15 +116,36 @@ try:
     df = pd.DataFrame(sheet.get_all_records())
 
     if not df.empty:
-        target_factories = df["工場名"].unique()
-        sel_graph_factory = st.selectbox("工場を選択", target_factories)
-        df_filtered = df[df["工場名"] == sel_graph_factory].copy()
+        # 日付を日付型に変換し、新しい列「年月」を作成
+        df["入力日"] = pd.to_datetime(df["入力日"])
+        df["年月"] = df["入力日"].dt.strftime('%Y-%m') # 2026-03 のような形式
+
+        col_g1, col_g2 = st.columns(2)
+        with col_g1:
+            target_factories = df["工場名"].unique()
+            sel_graph_factory = st.selectbox("工場を選択", target_factories, key="sel_f")
+        with col_g2:
+            # その工場にデータがある「月」だけを選択肢に出す
+            target_months = df[df["工場名"] == sel_graph_factory]["年月"].unique()
+            target_months = sorted(target_months, reverse=True) # 新しい月を上に
+            sel_month = st.selectbox("月を選択", target_months, key="sel_m")
+
+        # 選択された「工場」かつ「月」でデータを絞り込み
+        df_filtered = df[(df["工場名"] == sel_graph_factory) & (df["年月"] == sel_month)].copy()
+        
         categories = ["立体", "平面", "ズボン", "Yシャツ", "プレス"]
         df_sum = df_filtered[categories].sum()
         
-        # スマホでも文字が消えない標準グラフに戻す
+        st.subheader(f"{sel_graph_factory}工場：{sel_month} の累計")
         st.bar_chart(df_sum)
+        
+        # 月間合計値のサマリー
+        monthly_total = df_sum.sum()
+        st.info(f"💡 {sel_month} の総生産点数： {monthly_total} 点")
+
     else:
         st.info("データがありません")
-except:
+except Exception as e:
     st.write("データを読み込み中...")
+
+
