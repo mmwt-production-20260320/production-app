@@ -55,16 +55,20 @@ with col_a2:
 
 st.divider()
 
-# 生産数入力
-c1, c2, c3 = st.columns(3)
-with c1:
+# --- 生産数入力 (スマホで見やすく2列構成に変更) ---
+# 3列だとスマホで数字が隠れるため、2列にしてゆとりを持たせます
+col_p1, col_p2 = st.columns(2)
+
+with col_p1:
     val_ritai = st.number_input("立体", min_value=0, key=f"ritai_{st.session_state.form_id}")
-    val_heimen = st.number_input("平面", min_value=0, key=f"heimen_{st.session_state.form_id}")
-with c2:
     val_zubon = st.number_input("ズボン", min_value=0, key=f"zubon_{st.session_state.form_id}")
-    val_yshirt = st.number_input("Yシャツ", min_value=0, key=f"yshirt_{st.session_state.form_id}")
-with c3:
     val_press = st.number_input("プレス", min_value=0, key=f"press_{st.session_state.form_id}")
+
+with col_p2:
+    val_heimen = st.number_input("平面", min_value=0, key=f"heimen_{st.session_state.form_id}")
+    val_yshirt = st.number_input("Yシャツ", min_value=0, key=f"yshirt_{st.session_state.form_id}")
+    
+    # 5項目合計をここに配置
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
     st.markdown('<p class="label-text">5項目合計</p>', unsafe_allow_html=True)
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
