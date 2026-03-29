@@ -1,62 +1,34 @@
-/* 1. タイトルのサイズ */
-h1 {
-    font-size: 1.4rem !important;
-    padding-bottom: 5px;
-}
-
-
-/* 曜日と合計・生産点数のボックス共通設定 */
+/* 統一デザイン：曜日、5項目合計、人時生産点数用 */
 .result-box {
-    /* 枠線の設定（他の入力欄に近い色と太さに調整） */
-    border: 1px solid #464855 !important;
-    border-radius: 0.5rem !important;
-    background-color: #262730 !important;
-    
-    /* 高さの設定 */
-    height: 45px !important;
-    
-    /* 文字を真ん中に寄せる設定 */
-    display: flex !important;
-    align-items: center !important;   /* 上下の真ん中 */
-    justify-content: center !important; /* 左右の真ん中（左寄せがいい場合は flex-start） */
-    
-    /* 文字の見た目 */
-    color: white !important;
-    font-size: 1rem !important;
-    font-weight: 500 !important;
-    
-    /* 余白 */
-    padding: 0 10px !important;
-    margin-bottom: 1rem !important;
-}
-
-/* 計算結果・表示用ボックスのスタイル */
-.result-box {
-    /* 横幅を親要素（カラム）に100%合わせる */
+    /* 横幅をカラムに100%合わせ、内側にサイズを収める */
     width: 100% !important;
+    box-sizing: border-box !important;
+    
+    /* 標準入力欄と全く同じ背景色、枠線、角丸を指定 */
+    background-color: #262730 !important;
+    border: 1px solid rgba(250, 250, 250, 0.2) !important;
+    border-radius: 0.5rem !important;
+    
+    /* 高さの統一（標準の 40px 前後に調整） */
+    height: 40px !important;
+    
+    /* 文字の配置：上下左右の真ん中 */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-
-    /* 高さ・枠線を標準ウィジェットに統一 */
-    height: 42px !important; /* 標準のnumber_inputに近い高さ */
-    border: 1px solid #464855 !important;
-    border-radius: 0.5rem !important;
-    background-color: #262730 !important;
     
-    /* 文字の見た目 */
-    color: white !important;
+    /* 文字の見た目：標準に合わせる */
+    color: #FAFAFA !important;
     font-size: 1rem !important;
     
-    /* 箱のサイズ計算を内側基準にする（ズレ防止） */
-    box-sizing: border-box !important;
-    
-    /* 下の余白を標準ウィジェットと合わせる */
-    margin-top: 0px !important;
-    margin-bottom: 1rem !important;
+    /* ズレ防止の余白リセット */
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* ラベル（曜日、5項目合計などの文字）の上の余白を調整 */
+/* ラベル（「曜日」などの文字）の下の隙間を標準に合わせる */
 .stMarkdown p {
     margin-bottom: 4px !important;
+    font-size: 0.9rem !important;
+    color: #FAFAFA !important;
 }
