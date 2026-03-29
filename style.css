@@ -1,34 +1,30 @@
-/* 統一デザイン：曜日、5項目合計、人時生産点数用 */
+/* すべての計算結果・表示ボックスの統一デザイン */
 .result-box {
-    /* 横幅をカラムに100%合わせ、内側にサイズを収める */
     width: 100% !important;
     box-sizing: border-box !important;
     
-    /* 標準入力欄と全く同じ背景色、枠線、角丸を指定 */
+    /* 標準入力欄と同じ色・枠線 */
     background-color: #262730 !important;
     border: 1px solid rgba(250, 250, 250, 0.2) !important;
     border-radius: 0.5rem !important;
     
-    /* 高さの統一（標準の 40px 前後に調整） */
+    /* 高さを標準(40px)に合わせる */
     height: 40px !important;
     
-    /* 文字の配置：上下左右の真ん中 */
+    /* 文字を上下左右の真ん中に配置 */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     
-    /* 文字の見た目：標準に合わせる */
     color: #FAFAFA !important;
     font-size: 1rem !important;
-    
-    /* ズレ防止の余白リセット */
-    margin: 0 !important;
-    padding: 0 !important;
+    margin-bottom: 1rem !important;
 }
 
-/* ラベル（「曜日」などの文字）の下の隙間を標準に合わせる */
-.stMarkdown p {
+/* ラベル文字（曜日など）の余白を調整 */
+.label-text {
     margin-bottom: 4px !important;
     font-size: 0.9rem !important;
     color: #FAFAFA !important;
+    font-weight: 400;
 }
