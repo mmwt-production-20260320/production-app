@@ -56,19 +56,30 @@ with col_a2:
 
 st.divider()
 
-# 生産数入力（スマホでも文字が消えないよう2列で、step=1を復活）
+# --- 生産数入力（スマホの「index表示」を完全に封じ込める版） ---
 col_p1, col_p2 = st.columns(2)
+
 with col_p1:
-    val_ritai = st.number_input("立体", min_value=0, step=1, key=f"ritai_{st.session_state.form_id}")
-    val_heimen = st.number_input("平面", min_value=0, step=1, key=f"heimen_{st.session_state.form_id}")
-    val_zubon = st.number_input("ズボン", min_value=0, step=1, key=f"zubon_{st.session_state.form_id}")
+    st.markdown('<p class="label-text">立体</p>', unsafe_allow_html=True)
+    val_ritai = st.number_input("立体", min_value=0, step=1, label_visibility="collapsed", key=f"ritai_{st.session_state.form_id}")
+    
+    st.markdown('<p class="label-text">平面</p>', unsafe_allow_html=True)
+    val_heimen = st.number_input("平面", min_value=0, step=1, label_visibility="collapsed", key=f"heimen_{st.session_state.form_id}")
+    
+    st.markdown('<p class="label-text">ズボン</p>', unsafe_allow_html=True)
+    val_zubon = st.number_input("ズボン", min_value=0, step=1, label_visibility="collapsed", key=f"zubon_{st.session_state.form_id}")
+
 with col_p2:
-    val_yshirt = st.number_input("Yシャツ", min_value=0, step=1, key=f"yshirt_{st.session_state.form_id}")
-    val_press = st.number_input("プレス", min_value=0, step=1, key=f"press_{st.session_state.form_id}")
+    st.markdown('<p class="label-text">Yシャツ</p>', unsafe_allow_html=True)
+    val_yshirt = st.number_input("Yシャツ", min_value=0, step=1, label_visibility="collapsed", key=f"yshirt_{st.session_state.form_id}")
+    
+    st.markdown('<p class="label-text">プレス</p>', unsafe_allow_html=True)
+    val_press = st.number_input("プレス", min_value=0, step=1, label_visibility="collapsed", key=f"press_{st.session_state.form_id}")
+    
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
     st.markdown('<p class="label-text">5項目合計</p>', unsafe_allow_html=True)
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
-
+    
 st.divider()
 
 # 労働時間
