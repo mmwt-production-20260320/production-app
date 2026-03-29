@@ -2,26 +2,20 @@
 .result-box {
     width: 100% !important;
     box-sizing: border-box !important;
-    
     background-color: #262730 !important;
     border: 1px solid rgba(250, 250, 250, 0.2) !important;
     border-radius: 0.5rem !important;
-    height: 40px !important;
-    
-    /* 文字の配置：上下は真ん中、左右は左寄せ(flex-start)に変更 */
+    height: 42px !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important; /* ← ここを左寄せに！ */
-    
+    justify-content: flex-start !important;
     color: #FAFAFA !important;
     font-size: 1rem !important;
-    
-    /* 左側に少しだけ余白を入れて、他の入力欄と文字の位置を揃える */
     padding-left: 12px !important; 
     margin-bottom: 1rem !important;
 }
 
-/* ラベル文字（曜日など）の余白を調整 */
+/* ラベル文字の調整 */
 .label-text {
     margin-bottom: 4px !important;
     font-size: 0.9rem !important;
