@@ -3,7 +3,6 @@ import gspread
 from datetime import datetime
 import time
 import pandas as pd
-import altair as alt
 
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="生産管理入力", layout="centered", page_icon="🏭")
@@ -56,15 +55,15 @@ with col_a2:
 
 st.divider()
 
-# 生産数入力（2列にして幅を確保＋ボタン撤去）
+# 生産数入力（スマホでも文字が消えないよう2列で、step=1を復活）
 col_p1, col_p2 = st.columns(2)
 with col_p1:
-    val_ritai = st.number_input("立体", min_value=0, step=None, key=f"ritai_{st.session_state.form_id}")
-    val_heimen = st.number_input("平面", min_value=0, step=None, key=f"heimen_{st.session_state.form_id}")
-    val_zubon = st.number_input("ズボン", min_value=0, step=None, key=f"zubon_{st.session_state.form_id}")
+    val_ritai = st.number_input("立体", min_value=0, step=1, key=f"ritai_{st.session_state.form_id}")
+    val_heimen = st.number_input("平面", min_value=0, step=1, key=f"heimen_{st.session_state.form_id}")
+    val_zubon = st.number_input("ズボン", min_value=0, step=1, key=f"zubon_{st.session_state.form_id}")
 with col_p2:
-    val_yshirt = st.number_input("Yシャツ", min_value=0, step=None, key=f"yshirt_{st.session_state.form_id}")
-    val_press = st.number_input("プレス", min_value=0, step=None, key=f"press_{st.session_state.form_id}")
+    val_yshirt = st.number_input("Yシャツ", min_value=0, step=1, key=f"yshirt_{st.session_state.form_id}")
+    val_press = st.number_input("プレス", min_value=0, step=1, key=f"press_{st.session_state.form_id}")
     total_val = val_ritai + val_heimen + val_zubon + val_yshirt + val_press
     st.markdown('<p class="label-text">5項目合計</p>', unsafe_allow_html=True)
     st.markdown(f'<div class="result-box">{total_val}</div>', unsafe_allow_html=True)
@@ -121,17 +120,11 @@ try:
         sel_graph_factory = st.selectbox("工場を選択", target_factories)
         df_filtered = df[df["工場名"] == sel_graph_factory].copy()
         categories = ["立体", "平面", "ズボン", "Yシャツ", "プレス"]
-        df_sum = df_filtered[categories].sum().reset_index()
-        df_sum.columns = ["項目", "累計"]
-
-        # ラベルを斜めにするAltairグラフ
-        chart = alt.Chart(df_sum).mark_bar().encode(
-            x=alt.X("項目:N", axis=alt.Axis(labelAngle=-45), title="項目"),
-            y=alt.Y("累計:Q", title="累計点数"),
-            color=alt.value("#4682b4")
-        ).properties(height=300)
-        st.altair_chart(chart, use_container_width=True)
+        df_sum = df_filtered[categories].sum()
+        
+        # スマホでも文字が消えない標準グラフに戻す
+        st.bar_chart(df_sum)
     else:
         st.info("データがありません")
-except Exception as e:
-    st.write("分析データを準備中...")
+except:
+    st.write("データを読み込み中...")
