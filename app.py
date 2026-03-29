@@ -110,3 +110,49 @@ else:
         if st.button("いいえ（戻る）", use_container_width=True):
             st.session_state.confirm = False
             st.rerun()
+
+
+# --- 7. 分析・グラフ表示セクション ---
+st.divider()
+st.header("📊 工場別・カテゴリ比較分析")
+
+try:
+    import pandas as pd
+    # スプレッドシートから最新データを読み込み
+    creds_dict = st.secrets["gcp_service_account"]
+    client = gspread.service_account_from_dict(creds_dict)
+    sheet = client.open_by_key('1o6F0r3bo7cEtWM0PoaFcAyulY21_xIE_ItEq0EphmGI').sheet1
+    
+    # データを表形式(DataFrame)にする
+    df = pd.DataFrame(sheet.get_all_records())
+
+    if not df.empty:
+        # 1. 工場選択
+        target_factories = df["工場名"].unique()
+        sel_graph_factory = st.selectbox("分析する工場を選択してください", target_factories)
+
+        # 2. 選択された工場で絞り込み
+        df_filtered = df[df["工場名"] == sel_graph_factory].copy()
+        
+        # 3. 5項目の合計累計を算出
+        categories = ["立体", "平面", "ズボン", "Yシャツ", "プレス"]
+        # 各項目の合計値を計算
+        df_sum = df_filtered[categories].sum()
+
+        # 4. 棒グラフの表示
+        st.subheader(f"{sel_graph_factory}工場：項目別 合計累計")
+        
+        # Streamlitの st.bar_chart を使用
+        # df_sum は1行のデータなので、グラフ用に整形します
+        st.bar_chart(df_sum)
+
+        # 5. 数値データも表で表示（確認用）
+        st.write("項目別の累計数値")
+        st.dataframe(df_sum.T) # Tは縦横入れ替え
+
+    else:
+        st.info("データが蓄積されるとここにグラフが表示されます。")
+
+except Exception as e:
+    st.error(f"分析データの読み込み中にエラーが発生しました: {e}")
+
