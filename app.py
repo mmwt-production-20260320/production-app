@@ -34,8 +34,8 @@ def save_to_sheets(data_list):
         return False
 
 # --- 5. メイン画面 ---
-# タイトルに工場の絵文字を追加します
-st.title("🏭 生産管理入力")
+# st.title("🏭 生産管理入力") の代わりにこちらを貼り付け
+st.markdown('<div class="main-title">🏭 生産管理入力</div>', unsafe_allow_html=True)
 
 # 日付と曜日
 col_d1, col_d2 = st.columns(2)
@@ -118,9 +118,10 @@ else:
             st.session_state.confirm = False
             st.rerun()
 
-# --- 7. 分析・グラフ表示 (エラー対策強化版) ---
+# --- 7. 分析・グラフ表示 ---
 st.divider()
-st.header("📊 工場別・月別累計分析")
+# st.header("📊 工場別・月別累計分析") の代わりにこちらを貼り付け
+st.markdown('<div class="sub-title">📊 工場別・月別累計分析</div>', unsafe_allow_html=True)
 
 try:
     # データの読み込み
