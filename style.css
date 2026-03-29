@@ -21,3 +21,22 @@
     font-size: 0.9rem !important;
     color: #FAFAFA !important;
 }
+
+/* タイトルの文字サイズ調整 */
+.main-title {
+    font-size: 1.8rem !important; /* スマホでちょうど良い大きさ */
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #FAFAFA;
+}
+
+/* グラフ見出しの文字サイズ調整 */
+.sub-title {
+    font-size: 1.4rem !important;
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    color: #FAFAFA;
+}
+
+/* 既存のresult-boxなどはそのまま残してください */
