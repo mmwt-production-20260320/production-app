@@ -31,12 +31,12 @@
 }
 
 /* グラフ見出しの文字サイズ調整 */
+/* style.css の該当箇所を微調整する場合 */
 .sub-title {
-    font-size: 1.4rem !important;
+    font-size: 1.2rem !important; /* 1.4rem から少し小さくしました */
     font-weight: bold;
     margin-top: 10px;
     margin-bottom: 15px;
     color: #FAFAFA;
 }
 
-/* 既存のresult-boxなどはそのまま残してください */
